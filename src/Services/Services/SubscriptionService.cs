@@ -313,6 +313,28 @@ public class SubscriptionService
     }
 
     /// <summary>
+    /// Check uniqueness of parameters marked as unique.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <returns>
+    /// Subscription Parameters Model.
+    /// </returns>
+    public bool AreUniqueParametersUnique(SubscriptionResultExtension subscriptionDetail, Guid planGuid)
+    {
+        var subscriptionParameters = subscriptionDetail.SubscriptionParameters;
+        var tenantNameParameter = subscriptionParameters.Where(sp => sp.DisplayName == "Tenant Name").FirstOrDefault();
+        if (tenantNameParameter != default)
+        {
+            var existingParameters = this.subscriptionRepository.GetSubscriptionAttributesIdsByAttributeIdAndValue(planGuid, tenantNameParameter.PlanAttributeId, tenantNameParameter.Value);
+
+            if (existingParameters.Count == 0)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Adds the plan details for subscription.
     /// </summary>
     /// <param name="subscriptionParameters">The subscription parameters.</param>

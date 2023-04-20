@@ -60,6 +60,17 @@ public interface ISubscriptionsRepository : IDisposable, IBaseRepository<Subscri
     List<SubscriptionParametersOutput> GetSubscriptionsParametersById(Guid subscriptionId, Guid planId);
 
     /// <summary>
+    /// Number of subscriptions with parameter of same name
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <param name="planAttributeId">The plan attribute identifier.</param>
+    /// <returns>
+    /// List of  Subscription Attribute Values.
+    /// </returns>
+    IList<SubscriptionAttributeValues> GetSubscriptionAttributesIdsByAttributeIdAndValue(Guid planId, int planAttributeId, string attributeValue);
+
+    /// <summary>
     /// Adds the subscription parameters.
     /// </summary>
     /// <param name="subscriptionParametersOutput">The subscription parameters output.</param>

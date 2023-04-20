@@ -186,6 +186,25 @@ public class SubscriptionsRepository : ISubscriptionsRepository
     }
 
     /// <summary>
+    /// Number of subscriptions with parameter of same name
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <param name="planAttributeId">The plan attribute identifier.</param>
+    /// <returns>
+    /// List of  Subscription Attribute Values.
+    /// </returns>
+    public IList<SubscriptionAttributeValues> GetSubscriptionAttributesIdsByAttributeIdAndValue(Guid planId, int planAttributeId, string attributeValue)
+    {
+        if (planId != default && planAttributeId != default && attributeValue != default)
+        {
+            return this.context.SubscriptionAttributeValues.Where(av => av.PlanId == planId && av.PlanAttributeId == planAttributeId && av.Value == attributeValue).ToList();
+        }
+
+        return new List<SubscriptionAttributeValues>();
+    }
+
+    /// <summary>
     /// Updates the plan for subscription.
     /// </summary>
     /// <param name="subscriptionParametersOutput">The subscription parameters output.</param>

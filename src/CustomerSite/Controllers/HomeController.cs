@@ -545,6 +545,28 @@ public class HomeController : BaseController
                     {
                         try
                         {
+                            var uniqueTenant = subscriptionService.AreUniqueParametersUnique(subscriptionResultExtension, planDetail.PlanGuid);
+                            if (!uniqueTenant)
+                            {
+                                ModelState.AddModelError("SubscriptionParameters[0].Value", "Tenant Name already in use.");
+                            }
+
+                            if (!ModelState.IsValid)
+                            {
+                                subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+                                var subscriptionParmaeters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, planDetail.PlanGuid);
+
+                                // overwrite old value with new value
+                                subscriptionParmaeters[0].Value = subscriptionResultExtension.SubscriptionParameters[0].Value;
+
+                                // add parameters to Subscription model
+                                subscriptionDetail.SubscriptionParameters = subscriptionParmaeters;
+
+                                // show subscription for error correction
+                                return PartialView("_LandingPage", subscriptionDetail);
+                            }
+
+
                             this.logger.LogInformation("Save Subscription Parameters:  {0}", JsonSerializer.Serialize(subscriptionResultExtension.SubscriptionParameters));
                             if (subscriptionResultExtension.SubscriptionParameters != null && subscriptionResultExtension.SubscriptionParameters.Count() > 0)
                             {
