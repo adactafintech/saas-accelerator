@@ -31,14 +31,19 @@ public enum SubscriptionStatusEnumExtension
     PendingActivation,
 
     /// <summary>
+    /// Pending Provisioning
+    /// </summary>
+    PendingProvisioning,
+
+    /// <summary>
     /// The pending unsubscribe
     /// </summary>
     PendingUnsubscribe,
 
     /// <summary>
-    /// The activation failed
+    /// Provisioning Failed
     /// </summary>
-    ActivationFailed,
+    ProvisioningFailed,
 
     /// <summary>
     /// The unsubscribe failed

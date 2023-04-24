@@ -151,7 +151,7 @@ public class NotificationStatusHandler : AbstractSubscriptionStatusHandler
 
         string processStatus = "success";
         if (
-            subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.ActivationFailed.ToString() ||
+            subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.ProvisioningFailed.ToString() ||
             subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.UnsubscribeFailed.ToString())
         {
             processStatus = "failure";

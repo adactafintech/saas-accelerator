@@ -23,6 +23,11 @@ public enum SubscriptionStatusEnum
     Unsubscribed,
 
     /// <summary>
+    /// Pending Provisioning
+    /// </summary>
+    PendingProvisioning,
+
+    /// <summary>
     /// Pending Activation
     /// </summary>
     PendingActivation,
