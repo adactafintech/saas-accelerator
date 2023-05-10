@@ -1,5 +1,6 @@
 select *
 from dbo.Subscriptions
+where AMPSubscriptionId = 'd33a68cb-5c84-4698-d5eb-284d4d8145c1'
 
 select *
 from dbo.Offers
@@ -18,10 +19,12 @@ where PlanID = '243b5338-3663-492f-8dad-81f23f2947ef'
   and [Value] = 'Test01.2225'
 
 -- update dbo.Subscriptions
--- set SubscriptionStatus = 'PendingFulfillmentStart'
--- where Id = 1
+-- set SubscriptionStatus = 'PendingActivation'
+-- where Id = 11
 
--- Select OfferId from Plans where PlanGuId =@PlanId
+-- update SubscriptionAttributeValues
+-- set Value = 'igor-saas-01'
+-- where ID = 1
 
 SELECT
   Cast( ROW_NUMBER() OVER ( ORDER BY OA.ID) as Int)RowNumber  

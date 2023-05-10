@@ -31,6 +31,11 @@ public class HomeController : BaseController
     private readonly IFulfillmentApiService apiService;
 
     /// <summary>
+    /// Provisioning API client.
+    /// </summary>
+    private readonly IProvisioningApiService provisioningApiService;
+
+    /// <summary>
     /// The subscription repository..
     /// </summary>
     private readonly ISubscriptionsRepository subscriptionRepository;
@@ -101,7 +106,8 @@ public class HomeController : BaseController
     /// Initializes a new instance of the <see cref="HomeController" /> class.
     /// </summary>
     /// <param name="logger">The logger.</param>
-    /// <param name="apiClient">The API Client<see cref="IFulfilmentApiClient" />.</param>
+    /// <param name="apiService">The API Client<see cref="IFulfilmentApiClient" />.</param>
+    /// <param name="provisioningApiService">The provisioning API client.</param>
     /// <param name="subscriptionRepo">The subscription repository.</param>
     /// <param name="planRepository">The plan repository.</param>
     /// <param name="userRepository">The user repository.</param>
@@ -116,9 +122,10 @@ public class HomeController : BaseController
     /// <param name="cloudConfigs">The cloud configs.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     /// <param name="emailService">The email service.</param>
-    public HomeController(ILogger<HomeController> logger, IFulfillmentApiService apiService, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, IUsersRepository userRepository, IApplicationLogRepository applicationLogRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IEmailTemplateRepository emailTemplateRepository, IOffersRepository offersRepository, IPlanEventsMappingRepository planEventsMappingRepository, IOfferAttributesRepository offerAttributesRepository, IEventsRepository eventsRepository, ILoggerFactory loggerFactory, IEmailService emailService)
+    public HomeController(ILogger<HomeController> logger, IFulfillmentApiService apiService, IProvisioningApiService provisioningApiService, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, IUsersRepository userRepository, IApplicationLogRepository applicationLogRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IEmailTemplateRepository emailTemplateRepository, IOffersRepository offersRepository, IPlanEventsMappingRepository planEventsMappingRepository, IOfferAttributesRepository offerAttributesRepository, IEventsRepository eventsRepository, ILoggerFactory loggerFactory, IEmailService emailService)
     {
         this.apiService = apiService;
+        this.provisioningApiService = provisioningApiService;
         this.subscriptionRepository = subscriptionRepo;
         this.subscriptionLogRepository = subscriptionLogsRepo;
         this.applicationLogRepository = applicationLogRepository;
@@ -140,7 +147,7 @@ public class HomeController : BaseController
         this.loggerFactory = loggerFactory;
 
         this.pendingActivationStatusHandlers = new PendingActivationStatusHandler(
-            apiService,
+            provisioningApiService,
             subscriptionRepo,
             subscriptionLogsRepo,
             planRepository,
@@ -545,7 +552,7 @@ public class HomeController : BaseController
                     {
                         try
                         {
-                            var uniqueTenant = subscriptionService.AreUniqueParametersUnique(subscriptionResultExtension, planDetail.PlanGuid);
+                            var uniqueTenant = this.subscriptionService.AreUniqueParametersUnique(subscriptionResultExtension, planDetail.PlanGuid);
                             if (!uniqueTenant)
                             {
                                 ModelState.AddModelError("SubscriptionParameters[0].Value", "Tenant Name already in use.");

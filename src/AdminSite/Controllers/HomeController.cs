@@ -67,6 +67,8 @@ public class HomeController : BaseController
 
     private readonly IFulfillmentApiService fulfillApiService;
 
+    private readonly IProvisioningApiService provisioningApiService;
+
     private readonly IApplicationLogRepository applicationLogRepository;
 
     private readonly IMeteredBillingApiService billingApiService;
@@ -120,6 +122,7 @@ public class HomeController : BaseController
     /// <param name="applicationConfigRepository">The application configuration repository.</param>
     /// <param name="userRepository">The user repository.</param>
     /// <param name="fulfillApiService">The fulfill API client.</param>
+    /// <param name="provisioningApiService">The provisioning API client.</param>
     /// <param name="applicationLogRepository">The application log repository.</param>
     /// <param name="emailTemplateRepository">The email template repository.</param>
     /// <param name="planEventsMappingRepository">The plan events mapping repository.</param>
@@ -131,7 +134,7 @@ public class HomeController : BaseController
     /// <param name="offersRepository">The offers repository.</param>
     /// <param name="offersAttributeRepository">The offers attribute repository.</param>
     public HomeController(
-        IUsersRepository usersRepository, IMeteredBillingApiService billingApiService, ILogger<HomeController> logger, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, ISubscriptionUsageLogsRepository subscriptionUsageLogsRepository, IMeteredDimensionsRepository dimensionsRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IUsersRepository userRepository, IFulfillmentApiService fulfillApiService, IApplicationLogRepository applicationLogRepository, IEmailTemplateRepository emailTemplateRepository, IPlanEventsMappingRepository planEventsMappingRepository, IEventsRepository eventsRepository, SaaSApiClientConfiguration saaSApiClientConfiguration, ILoggerFactory loggerFactory, IEmailService emailService, IOffersRepository offersRepository, IOfferAttributesRepository offersAttributeRepository)
+        IUsersRepository usersRepository, IMeteredBillingApiService billingApiService, ILogger<HomeController> logger, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, ISubscriptionUsageLogsRepository subscriptionUsageLogsRepository, IMeteredDimensionsRepository dimensionsRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IUsersRepository userRepository, IFulfillmentApiService fulfillApiService, IProvisioningApiService provisioningApiService, IApplicationLogRepository applicationLogRepository, IEmailTemplateRepository emailTemplateRepository, IPlanEventsMappingRepository planEventsMappingRepository, IEventsRepository eventsRepository, SaaSApiClientConfiguration saaSApiClientConfiguration, ILoggerFactory loggerFactory, IEmailService emailService, IOffersRepository offersRepository, IOfferAttributesRepository offersAttributeRepository)
     {
         this.billingApiService = billingApiService;
         this.subscriptionRepo = subscriptionRepo;
@@ -145,6 +148,7 @@ public class HomeController : BaseController
         this.userRepository = userRepository;
         this.userService = new UserService(userRepository);
         this.fulfillApiService = fulfillApiService;
+        this.provisioningApiService = provisioningApiService;
         this.applicationLogRepository = applicationLogRepository;
         this.applicationLogService = new ApplicationLogService(this.applicationLogRepository);
         this.subscriptionRepository = this.subscriptionRepo;
@@ -159,7 +163,7 @@ public class HomeController : BaseController
         this.saaSApiClientConfiguration = saaSApiClientConfiguration;
 
         this.pendingActivationStatusHandlers = new PendingActivationStatusHandler(
-            fulfillApiService,
+            provisioningApiService,
             subscriptionRepo,
             subscriptionLogsRepo,
             planRepository,

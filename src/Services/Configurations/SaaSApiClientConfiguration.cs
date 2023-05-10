@@ -112,5 +112,35 @@ public class SaaSApiClientConfiguration
     /// </value>
     public string Environment { get; init; }
 
+    /// <summary>
+    /// Gets or sets the provisioning URL.
+    /// </summary>
+    /// <value>
+    /// The GitLab URL.
+    /// </value>
+    public string ProvisionAPIBaseUrl { get; set; }
 
+    /// <summary>
+    /// Gets or sets provisioning branch.
+    /// </summary>
+    /// <value>
+    /// Branch name.
+    /// </value>
+    public string ProvisionBranch { get; set; }
+
+    /// <summary>
+    /// Gets or sets provisioning token.
+    /// </summary>
+    /// <value>
+    /// Token provided by GitLab owner.
+    /// </value>
+    public string ProvisionToken { get; set; }
+
+    /// <summary>
+    /// Gets or sets provisioning WebHook token.
+    /// </summary>
+    /// <value>
+    /// Token issued to GitLab owner.
+    /// </value>
+    public string ProvisionWebHookToken { get; set; }
 }

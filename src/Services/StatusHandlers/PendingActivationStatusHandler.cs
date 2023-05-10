@@ -7,6 +7,7 @@ using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
 using Marketplace.SaaS.Accelerator.Services.Contracts;
 using Marketplace.SaaS.Accelerator.Services.Models;
+using Marketplace.SaaS.Accelerator.Services.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Marketplace.SaaS.Accelerator.Services.StatusHandlers;
@@ -18,9 +19,19 @@ namespace Marketplace.SaaS.Accelerator.Services.StatusHandlers;
 public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
 {
     /// <summary>
-    /// The fulfillment apiclient.
+    /// The plan repository.
     /// </summary>
-    private readonly IFulfillmentApiService fulfillmentApiService;
+    private readonly IPlansRepository planRepository;
+
+    /// <summary>
+    /// The subscription service.
+    /// </summary>
+    private readonly SubscriptionService subscriptionService;
+
+    /// <summary>
+    /// The provisioning apiclient.
+    /// </summary>
+    private readonly IProvisioningApiService provisioningApiService;
 
     /// <summary>
     /// The subscription log repository.
@@ -32,10 +43,12 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
     /// </summary>
     private readonly ILogger<PendingActivationStatusHandler> logger;
 
+    private readonly ISubscriptionsRepository subscriptionRepository;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PendingActivationStatusHandler"/> class.
     /// </summary>
-    /// <param name="fulfillApiService">The fulfill API client.</param>
+    /// <param name="provisioningApiService">The provisioning API client.</param>
     /// <param name="subscriptionsRepository">The subscriptions repository.</param>
     /// <param name="subscriptionLogRepository">The subscription log repository.</param>
     /// <param name="subscriptionTemplateParametersRepository">The subscription template parameters repository.</param>
@@ -43,7 +56,7 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
     /// <param name="usersRepository">The users repository.</param>
     /// <param name="logger">The logger.</param>
     public PendingActivationStatusHandler(
-        IFulfillmentApiService fulfillApiService,
+        IProvisioningApiService provisioningApiService,
         ISubscriptionsRepository subscriptionsRepository,
         ISubscriptionLogRepository subscriptionLogRepository,
         IPlansRepository plansRepository,
@@ -51,8 +64,11 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
         ILogger<PendingActivationStatusHandler> logger)
         : base(subscriptionsRepository, plansRepository, usersRepository)
     {
-        this.fulfillmentApiService = fulfillApiService;
+        this.provisioningApiService = provisioningApiService;
+        this.planRepository = plansRepository;
         this.subscriptionLogRepository = subscriptionLogRepository;
+        this.subscriptionRepository = subscriptionsRepository;
+        this.subscriptionService = new SubscriptionService(this.subscriptionRepository, this.planRepository);
         this.logger = logger;
     }
 
@@ -73,7 +89,16 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
         {
             try
             {
-                this.logger?.LogInformation("Get attributelsit");
+                SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+                this.logger?.LogInformation("Trigger provisioning");
+
+                // var oldValue = this.subscriptionService.GetPartnerSubscription(this.CurrentUserEmailAddress, subscriptionID, true).FirstOrDefault();
+                subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionID);
+                Plans planDetail = this.planRepository.GetById(subscriptionDetail.PlanId);
+                var subscriptionParmaeters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionID, planDetail.PlanGuid);
+
+
+                var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID, subscriptionParmaeters[0].Value, subscriptionParmaeters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.logger?.LogInformation("UpdateWebJobSubscriptionStatus");
 

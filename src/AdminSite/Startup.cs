@@ -3,6 +3,7 @@
 
 using System;
 using Azure.Identity;
+using Marketplace.SaaS.Accelerator.AdminSite.WebHook;
 using Marketplace.SaaS.Accelerator.DataAccess.Context;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Services;
@@ -11,6 +12,7 @@ using Marketplace.SaaS.Accelerator.Services.Contracts;
 using Marketplace.SaaS.Accelerator.Services.Models;
 using Marketplace.SaaS.Accelerator.Services.Services;
 using Marketplace.SaaS.Accelerator.Services.Utilities;
+using Marketplace.SaaS.Accelerator.Services.WebHook;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -77,7 +79,11 @@ public class Startup
             SaaSAppUrl = this.Configuration["SaaSApiConfiguration:SaaSAppUrl"],
             SignedOutRedirectUri = this.Configuration["SaaSApiConfiguration:SignedOutRedirectUri"],
             TenantId = this.Configuration["SaaSApiConfiguration:TenantId"] ?? Guid.Empty.ToString(),
-            SupportMeteredBilling = Convert.ToBoolean(this.Configuration["SaaSApiConfiguration:supportmeteredbilling"])
+            SupportMeteredBilling = Convert.ToBoolean(this.Configuration["SaaSApiConfiguration:supportmeteredbilling"]),
+            ProvisionAPIBaseUrl = this.Configuration["SaaSApiConfiguration:ProvisionAPIBaseUrl"],
+            ProvisionToken = this.Configuration["SaaSApiConfiguration:ProvisionToken"],
+            ProvisionBranch = this.Configuration["SaaSApiConfiguration:ProvisionBranch"],
+            ProvisionWebHookToken = this.Configuration["SaaSApiConfiguration:ProvisionWebHookToken"],
         };
         var knownUsers = new KnownUsersModel()
         {
@@ -118,6 +124,7 @@ public class Startup
 
         services
             .AddSingleton<IFulfillmentApiService>(new FulfillmentApiService(new MarketplaceSaaSClient(fulfillmentBaseApi, creds), config, new FulfillmentApiClientLogger()))
+            .AddSingleton<IProvisioningApiService>(new ProvisioningApiService(config, new ProvisioningApiClientLogger()))
             .AddSingleton<IMeteredBillingApiService>(new MeteredBillingApiService(new MarketplaceMeteringClient(creds), config, new MeteringApiClientLogger()))
             .AddSingleton<SaaSApiClientConfiguration>(config)
             .AddSingleton<KnownUsersModel>(knownUsers);
@@ -207,5 +214,7 @@ public class Startup
         services.AddScoped<ISchedulerFrequencyRepository, SchedulerFrequencyRepository>();
         services.AddScoped<IMeteredPlanSchedulerManagementRepository, MeteredPlanSchedulerManagementRepository>();
         services.AddScoped<ISchedulerManagerViewRepository, SchedulerManagerViewRepository>();
+        services.AddScoped<ICiCdWebhookProcessor, CiCdWebhookProcessor>();
+        services.AddScoped<ICiCdWebhookHandler, CiCdWebHookHandler>();
     }
 }
