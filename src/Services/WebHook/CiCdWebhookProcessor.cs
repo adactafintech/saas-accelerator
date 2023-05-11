@@ -36,22 +36,36 @@ public class CiCdWebhookProcessor : ICiCdWebhookProcessor
     /// <summary>
     /// Processes the webhook notification asynchronous.
     /// </summary>
-    /// <param name="payload">The payload.</param>
-    /// <param name="config">Current environmental configuration</param>
+    /// <param name="subscriptionId">The subscription ID.</param>
+    /// <param name="pipelineStatus">The pipeline status</param>
     /// <returns> Notification.</returns>
-    public async Task ProcessWebhookNotificationAsync(Guid subscriptionId, PipelineStatus status)
+    public async Task ProcessWebhookNotificationAsync(Guid subscriptionId, PipelineOperation pipelineOperation, PipelineStatus pipelineStatus)
     {
-        switch (status)
+        if (pipelineOperation == PipelineOperation.Provision)
         {
-            case PipelineStatus.Failed:
-            case PipelineStatus.Cancelled:
-            case PipelineStatus.Skipped:
-                await this.webhookHandler.ProvisioningFailureAsync(subscriptionId, status).ConfigureAwait(false);
-                break;
-
-            default:
+            if (pipelineStatus == PipelineStatus.Failed ||
+                pipelineStatus == PipelineStatus.Cancelled ||
+                pipelineStatus == PipelineStatus.Skipped)
+            {
+                await this.webhookHandler.ProvisioningFailureAsync(subscriptionId, pipelineStatus).ConfigureAwait(false);
+            }
+            else
+            {
                 await this.webhookHandler.ProvisioningSuccessAsync(subscriptionId).ConfigureAwait(false);
-                break;
+            }
+        }
+        else
+        {
+            if (pipelineStatus == PipelineStatus.Failed ||
+                pipelineStatus == PipelineStatus.Cancelled ||
+                pipelineStatus == PipelineStatus.Skipped)
+            {
+                await this.webhookHandler.DeprovisioningFailureAsync(subscriptionId, pipelineStatus).ConfigureAwait(false);
+            }
+            else
+            {
+                await this.webhookHandler.DeprovisioningSuccessAsync(subscriptionId).ConfigureAwait(false);
+            }
         }
     }
 }

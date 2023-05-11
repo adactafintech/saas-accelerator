@@ -19,7 +19,7 @@ where PlanID = '243b5338-3663-492f-8dad-81f23f2947ef'
   and [Value] = 'Test01.2225'
 
 -- update dbo.Subscriptions
--- set SubscriptionStatus = 'PendingActivation'
+-- set SubscriptionStatus = 'Subscribed'
 -- where Id = 11
 
 -- update SubscriptionAttributeValues

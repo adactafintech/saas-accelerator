@@ -167,11 +167,10 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
     /// Processes provisioning success asynchronous.
     /// </summary>
     /// <param name="subscriptionId">The subscription ID.</param>
-    /// <param name="status">The provisioning pipeline status.</param>
     /// <returns>Provisioning Success Async</returns>
     public async Task ProvisioningSuccessAsync(Guid subscriptionId)
     {
-        this.logger?.LogInformation("CiCdWebHookHandler {0}", subscriptionId);
+        this.logger?.LogInformation("CiCdWebHookHandler provisioning success {0}", subscriptionId);
         var subscription = this.subscriptionsRepository.GetById(subscriptionId);
         this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
         this.logger?.LogInformation("Get User");
@@ -232,10 +231,11 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
     /// Processes provisioning failure asynchronous.
     /// </summary>
     /// <param name="payload">The payload.</param>
+    /// <param name="status">The pipeline status.</param>
     /// <returns>Provisioning Failure Async</returns>
     public async Task ProvisioningFailureAsync(Guid subscriptionId, PipelineStatus status)
     {
-        this.logger?.LogInformation("CiCdWebHookHandler {0}", subscriptionId);
+        this.logger?.LogInformation("CiCdWebHookHandler provisioning failure {0}", subscriptionId);
         var subscription = this.subscriptionsRepository.GetById(subscriptionId);
         this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
         this.logger?.LogInformation("Get User");
@@ -265,208 +265,78 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
         }
     }
 
-    ///// <summary>
-    ///// Changes the plan asynchronous.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    //public async Task ChangePlanAsync(WebhookPayload payload)
-    //{
-    //    var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-    //    SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-    //    {
-    //        Attribute = Convert.ToString(SubscriptionLogAttributes.Plan),
-    //        SubscriptionId = oldValue?.SubscribeId,
-    //        OldValue = oldValue?.PlanId,
-    //        CreateBy = null,
-    //        CreateDate = DateTime.Now,
-    //    };
+    /// <summary>
+    /// Processes deprovisioning success asynchronous.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription ID.</param>
+    /// <returns>Deprovisioning Success Async</returns>
+    public async Task DeprovisioningSuccessAsync(Guid subscriptionId)
+    {
+        this.logger?.LogInformation("CiCdWebHookHandler deprovisioning success {0}", subscriptionId);
+        var subscription = this.subscriptionsRepository.GetById(subscriptionId);
+        this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
+        this.logger?.LogInformation("Get User");
+        var userdeatils = this.usersRepository.Get(subscription.UserId.GetValueOrDefault());
+        string oldstatus = subscription.SubscriptionStatus;
 
-    //    // we reject if the config value is set to false and the old plan is not the same as the new plan.
-    //    // if the old plan is the same as new plan then its a REVERT webhook scenario where we have to accept the change.
-    //    // we also reject if the subscription is not in the DB
-    //    var _acceptSubscriptionUpdates = Convert.ToBoolean(this.applicationConfigRepository.GetValueByName(AcceptSubscriptionUpdates));
-    //    if ((!_acceptSubscriptionUpdates && payload.PlanId != payload.Subscription.PlanId) || oldValue == null)
-    //    {
-    //        auditLog.NewValue = oldValue?.PlanId;
-    //        this.subscriptionsLogRepository.Save(auditLog);
-    //        throw new MarketplaceException("Plan Change rejected due to Config settings or Subscription not in database");
-    //    }
+        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString())
+        {
+            this.logger?.LogInformation("UpdateSubscriptionStatus");
 
-    //    this.subscriptionService.UpdateSubscriptionPlan(payload.SubscriptionId, payload.PlanId);
-    //    await this.applicationLogService.AddApplicationLog("Plan Successfully Changed.").ConfigureAwait(false);
-    //    auditLog.NewValue = payload.PlanId;
-    //    this.subscriptionsLogRepository.Save(auditLog);
-    //    await Task.CompletedTask;
-    //}
+            this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionId, SubscriptionStatusEnumExtension.Deprovisioned.ToString(), true);
 
-    ///// <summary>
-    ///// Changes the quantity asynchronous.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns>
-    ///// Change QuantityAsync.
-    ///// </returns>
-    ///// <exception cref="NotImplementedException"> Exception.</exception>
-    //public async Task ChangeQuantityAsync(WebhookPayload payload)
-    //{
-    //    var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-    //    SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-    //    {
-    //        Attribute = Convert.ToString(SubscriptionLogAttributes.Quantity),
-    //        SubscriptionId = oldValue?.SubscribeId,
-    //        OldValue = oldValue?.Quantity.ToString(),
-    //        CreateBy = null,
-    //        CreateDate = DateTime.Now,
-    //    };
+            SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+            {
+                Attribute = SubscriptionLogAttributes.Status.ToString(),
+                SubscriptionId = subscription.Id,
+                NewValue = SubscriptionStatusEnumExtension.Deprovisioned.ToString(),
+                OldValue = oldstatus,
+                CreateBy = userdeatils.UserId,
+                CreateDate = DateTime.Now,
+            };
+            this.subscriptionsLogRepository.Save(auditLog);
 
-    //    // we reject if the config value is set to false and the old quantity is not the same as the new quantity.
-    //    // if the old quantity is the same as new quantity then its a REVERT webhook scenario where we have to accept the change.
-    //    // we also reject if the subscription is not in the DB
-    //    var _acceptSubscriptionUpdates = Convert.ToBoolean(this.applicationConfigRepository.GetValueByName(AcceptSubscriptionUpdates));
-    //    if ((!_acceptSubscriptionUpdates && payload.Quantity != payload.Subscription.Quantity) || oldValue == null)
-    //    {
-    //        auditLog.NewValue = oldValue?.Quantity.ToString();
-    //        this.subscriptionsLogRepository.Save(auditLog);
-    //        throw new MarketplaceException("Quantity Change Request reject due to Config settings or Subscription not in database");
-    //    }
+            this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, "Deprovisioned", SubscriptionStatusEnumExtension.Deprovisioned.ToString());
 
-    //    this.subscriptionService.UpdateSubscriptionQuantity(payload.SubscriptionId, payload.Quantity);
-    //    await this.applicationLogService.AddApplicationLog("Quantity Successfully Changed.").ConfigureAwait(false);
-    //    auditLog.NewValue = payload.Quantity.ToString();
-    //    this.subscriptionsLogRepository.Save(auditLog);
-    //    await Task.CompletedTask;
-    //}
+            await Task.CompletedTask;
+        }
+    }
 
-    ///// <summary>
-    ///// Reinstated is followed by Suspend.
-    ///// This is called when customer fixed their billing issues and partner can choose to reinstate the suspened subscription to subscribed.
-    ///// And resume the software access to the customer.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns> Exception.</returns>
-    ///// <exception cref="NotImplementedException"> Not Implemented Exception. </exception>
-    //public async Task ReinstatedAsync(WebhookPayload payload)
-    //{
-    //    var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-    //    SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-    //    {
-    //        Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-    //        SubscriptionId = oldValue?.SubscribeId,
-    //        OldValue = Convert.ToString(oldValue?.SubscriptionStatus),
-    //        CreateBy = null,
-    //        CreateDate = DateTime.Now,
-    //    };
+    /// <summary>
+    /// Processes deprovisioning failure asynchronous.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription ID.</param>
+    /// <param name="status">The pipeline status.</param>
+    /// <returns>Deprovisioning Failure Async</returns>
+    public async Task DeprovisioningFailureAsync(Guid subscriptionId, PipelineStatus status)
+    {
+        this.logger?.LogInformation("CiCdWebHookHandler deprovisioning failure {0}", subscriptionId);
+        var subscription = this.subscriptionsRepository.GetById(subscriptionId);
+        this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
+        this.logger?.LogInformation("Get User");
+        var userdeatils = this.usersRepository.Get(subscription.UserId.GetValueOrDefault());
+        string oldstatus = subscription.SubscriptionStatus;
 
-    //    //gets the user setting from appconfig, if key doesnt exist, add to control the behavior.
-    //    //_acceptSubscriptionUpdates should be true and subscription should be in db to accept subscription updates
-    //    var _acceptSubscriptionUpdates = Convert.ToBoolean(this.applicationConfigRepository.GetValueByName(AcceptSubscriptionUpdates));
-    //    if (_acceptSubscriptionUpdates && oldValue != null)
-    //    {
-    //        this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.Subscribed.ToString(), false);
-    //        await this.applicationLogService.AddApplicationLog("Reinstated Successfully.").ConfigureAwait(false);
-    //        auditLog.NewValue = Convert.ToString(SubscriptionStatusEnum.Subscribed);
-                
-    //    }
-    //    else
-    //    {
-    //        var patchOperation = await fulfillApiService.PatchOperationStatusResultAsync(payload.SubscriptionId, payload.OperationId, Microsoft.Marketplace.SaaS.Models.UpdateOperationStatusEnum.Failure);
-    //        if (patchOperation != null && patchOperation.Status != 200)
-    //        {
-    //            await this.applicationLogService.AddApplicationLog($"Reinstate operation PATCH failed with status statuscode {patchOperation.Status} {patchOperation.ReasonPhrase}.").ConfigureAwait(false);
-    //            //partner trying to fail update operation from customer but PATCH on operation didnt succeced, hence throwing an error
-    //            throw new Exception(patchOperation.ReasonPhrase);
-    //        }
+        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString())
+        {
+            this.logger?.LogInformation("UpdateSubscriptionStatus");
 
-    //        await this.applicationLogService.AddApplicationLog("Reinstate Change Request Rejected Successfully.").ConfigureAwait(false);
-    //        auditLog.NewValue = Convert.ToString(oldValue?.SubscriptionStatus);
-    //    }
+            this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionId, SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString(), true);
 
-    //    this.subscriptionsLogRepository.Save(auditLog); 
+            SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+            {
+                Attribute = SubscriptionLogAttributes.Status.ToString(),
+                SubscriptionId = subscription.Id,
+                NewValue = SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString(),
+                OldValue = oldstatus,
+                CreateBy = userdeatils.UserId,
+                CreateDate = DateTime.Now,
+            };
+            this.subscriptionsLogRepository.Save(auditLog);
 
-    //    await Task.CompletedTask;
-    //}
+            this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, "Deprovisioned", SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString());
 
-    ///// <summary>
-    ///// Renewed the subscription.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    //public async Task RenewedAsync()
-    //{
-    //    await this.applicationLogService.AddApplicationLog("Offer Successfully Renewed.").ConfigureAwait(false);
-
-    //    await Task.CompletedTask;
-    //}
-
-    ///// <summary>
-    ///// Suspended the asynchronous.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns> Exception.</returns>
-    ///// <exception cref="NotImplementedException"> Implemented Exception.</exception>
-    //public async Task SuspendedAsync(WebhookPayload payload)
-    //{
-    //    var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-    //    this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.Suspend.ToString(), false);
-    //    await this.applicationLogService.AddApplicationLog("Offer Successfully Suspended.").ConfigureAwait(false);
-
-    //    if (oldValue != null)
-    //    {
-    //        SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-    //        {
-    //            Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-    //            SubscriptionId = oldValue.SubscribeId,
-    //            NewValue = Convert.ToString(SubscriptionStatusEnum.Suspended),
-    //            OldValue = Convert.ToString(oldValue.SubscriptionStatus),
-    //            CreateBy = null,
-    //            CreateDate = DateTime.Now,
-    //        };
-    //        this.subscriptionsLogRepository.Save(auditLog);
-    //    }
-
-    //    await Task.CompletedTask;
-    //}
-
-    ///// <summary>
-    ///// Unsubscribed the asynchronous.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    //public async Task UnsubscribedAsync(WebhookPayload payload)
-    //{
-    //    var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-    //    this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.Unsubscribed.ToString(), false);
-    //    await this.applicationLogService.AddApplicationLog("Offer Successfully UnSubscribed.").ConfigureAwait(false);
-
-    //    if (oldValue != null)
-    //    {
-    //        SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-    //        {
-    //            Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-    //            SubscriptionId = oldValue.SubscribeId,
-    //            NewValue = Convert.ToString(SubscriptionStatusEnum.Unsubscribed),
-    //            OldValue = Convert.ToString(oldValue.SubscriptionStatus),
-    //            CreateBy = null,
-    //            CreateDate = DateTime.Now,
-    //        };
-    //        this.subscriptionsLogRepository.Save(auditLog);
-    //    }
-
-    //    this.notificationStatusHandlers.Process(payload.SubscriptionId);
-
-    //    await Task.CompletedTask;
-    //}
-
-    ///// <summary>
-    ///// Report unknow action from the webhook the asynchronous.
-    ///// </summary>
-    ///// <param name="payload">The payload.</param>
-    ///// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    //public async Task UnknownActionAsync(WebhookPayload payload)
-    //{
-    //    await this.applicationLogService.AddApplicationLog("Offer Received an unknown action: " + payload.Action).ConfigureAwait(false);
-
-    //    await Task.CompletedTask;
-    //}
+            await Task.CompletedTask;
+        }
+    }
 }

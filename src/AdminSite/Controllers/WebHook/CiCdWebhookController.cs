@@ -123,13 +123,18 @@ public class CiCdWebhookController : ControllerBase
                 throw new MarketplaceException("Pipeline was not triggered by this application.");
             }
 
+            var pipelineOperation = pipeline.ObjectAttributes.Variables.FirstOrDefault(v => v.Key == "OPERATION")?.Value;
+            if (pipelineOperation == null || (pipelineOperation != "provision" && pipelineOperation != "destroy" ))
+            {
+                throw new MarketplaceException("Unknown pipeline operation.");
+            }
 
             if (pipeline.ObjectAttributes?.Status == PipelineStatus.Success || 
                 pipeline.ObjectAttributes?.Status == PipelineStatus.Failed || 
                 pipeline.ObjectAttributes?.Status == PipelineStatus.Cancelled || 
                 pipeline.ObjectAttributes?.Status == PipelineStatus.Skipped)
             {
-                await this.webhookProcessor.ProcessWebhookNotificationAsync(new Guid(subscriptionId), pipeline.ObjectAttributes.Status).ConfigureAwait(false);
+                await this.webhookProcessor.ProcessWebhookNotificationAsync(new Guid(subscriptionId), Enum.Parse<PipelineOperation>(pipelineOperation, true), pipeline.ObjectAttributes.Status).ConfigureAwait(false);
             }
             else
             {

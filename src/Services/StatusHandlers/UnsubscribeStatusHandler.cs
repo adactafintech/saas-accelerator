@@ -7,6 +7,7 @@ using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
 using Marketplace.SaaS.Accelerator.Services.Contracts;
 using Marketplace.SaaS.Accelerator.Services.Models;
+using Marketplace.SaaS.Accelerator.Services.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Marketplace.SaaS.Accelerator.Services.StatusHandlers;
@@ -23,6 +24,16 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
     private readonly IFulfillmentApiService fulfillmentApiService;
 
     /// <summary>
+    /// The provisioning apiclient.
+    /// </summary>
+    private readonly IProvisioningApiService provisioningApiService;
+
+    /// <summary>
+    /// The subscription service.
+    /// </summary>
+    private readonly SubscriptionService subscriptionService;
+
+    /// <summary>
     /// The subscription log repository.
     /// </summary>
     private readonly ISubscriptionLogRepository subscriptionLogRepository;
@@ -35,6 +46,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
     /// <summary>
     /// Initializes a new instance of the <see cref="UnsubscribeStatusHandler" /> class.
     /// </summary>
+    /// <param name="provisioningApiService">The provisioning API client.</param>
     /// <param name="fulfillApiService">The fulfill API client.</param>
     /// <param name="subscriptionsRepository">The subscriptions repository.</param>
     /// <param name="subscriptionLogRepository">The subscription log repository.</param>
@@ -43,6 +55,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
     /// <param name="logger">The logger.</param>
     public UnsubscribeStatusHandler(
         IFulfillmentApiService fulfillApiService,
+        IProvisioningApiService provisioningApiService,
         ISubscriptionsRepository subscriptionsRepository,
         ISubscriptionLogRepository subscriptionLogRepository,
         IPlansRepository plansRepository,
@@ -51,7 +64,9 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
         : base(subscriptionsRepository, plansRepository, usersRepository)
     {
         this.fulfillmentApiService = fulfillApiService;
+        this.provisioningApiService = provisioningApiService;
         this.subscriptionLogRepository = subscriptionLogRepository;
+        this.subscriptionService = new SubscriptionService(this.subscriptionsRepository, this.plansRepository);
         this.logger = logger;
     }
 
@@ -72,7 +87,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
         {
             try
             {
-                var subscriptionData = this.fulfillmentApiService.DeleteSubscriptionAsync(subscriptionID, subscription.AmpplanId).ConfigureAwait(false).GetAwaiter().GetResult();
+                // var subscriptionData = this.fulfillmentApiService.DeleteSubscriptionAsync(subscriptionID, subscription.AmpplanId).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.Unsubscribed.ToString(), false);
 
@@ -91,7 +106,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
             }
             catch (Exception ex)
             {
-                string errorDescriptin = string.Format("Exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescriptin = string.Format("Unsubscribe exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
                 this.subscriptionLogRepository.LogStatusDuringProvisioning(subscriptionID, errorDescriptin, SubscriptionStatusEnumExtension.UnsubscribeFailed.ToString());
                 this.logger?.LogInformation(errorDescriptin);
 
@@ -102,6 +117,55 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
                     Attribute = SubscriptionLogAttributes.Status.ToString(),
                     SubscriptionId = subscription.Id,
                     NewValue = SubscriptionStatusEnumExtension.UnsubscribeFailed.ToString(),
+                    OldValue = subscription.SubscriptionStatus,
+                    CreateBy = userdeatils.UserId,
+                    CreateDate = DateTime.Now,
+                };
+                this.subscriptionLogRepository.Save(auditLog);
+
+                // if error in unsubscribing then do not deprovision tenant
+                return;
+            }
+
+            try
+            {
+                SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+                this.logger?.LogInformation("Deplovisioning tenant {0}", subscriptionID);
+
+                subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionID);
+                Plans planDetail = this.plansRepository.GetById(subscriptionDetail.PlanId);
+                var subscriptionParmaeters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionID, planDetail.PlanGuid);
+
+                var pipelineData = this.provisioningApiService.DeprovisionSubscriptionAsync(subscriptionID, subscriptionParmaeters[0].Value, subscriptionParmaeters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString(), false);
+
+                SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                {
+                    Attribute = SubscriptionLogAttributes.Status.ToString(),
+                    SubscriptionId = subscription.Id,
+                    NewValue = SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString(),
+                    OldValue = status,
+                    CreateBy = userdeatils.UserId,
+                    CreateDate = DateTime.Now,
+                };
+                this.subscriptionLogRepository.Save(auditLog);
+
+                this.subscriptionLogRepository.LogStatusDuringProvisioning(subscriptionID, "Unsubscribed", SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString());
+            }
+            catch (Exception ex)
+            {
+                string errorDescriptin = string.Format("Deprovision exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                this.subscriptionLogRepository.LogStatusDuringProvisioning(subscriptionID, errorDescriptin, SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString());
+                this.logger?.LogInformation(errorDescriptin);
+
+                this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString(), true);
+
+                SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                {
+                    Attribute = SubscriptionLogAttributes.Status.ToString(),
+                    SubscriptionId = subscription.Id,
+                    NewValue = SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString(),
                     OldValue = subscription.SubscriptionStatus,
                     CreateBy = userdeatils.UserId,
                     CreateDate = DateTime.Now,

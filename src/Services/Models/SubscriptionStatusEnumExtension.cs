@@ -11,6 +11,16 @@ public enum SubscriptionStatusEnumExtension
     PendingFulfillmentStart,
 
     /// <summary>
+    /// Pending Activation
+    /// </summary>
+    PendingActivation,
+
+    /// <summary>
+    /// Pending Provisioning
+    /// </summary>
+    PendingProvisioning,
+
+    /// <summary>
     /// The subscribed
     /// </summary>
     Subscribed,
@@ -26,24 +36,9 @@ public enum SubscriptionStatusEnumExtension
     UnRecognized,
 
     /// <summary>
-    /// Pending Activation
-    /// </summary>
-    PendingActivation,
-
-    /// <summary>
-    /// Pending Provisioning
-    /// </summary>
-    PendingProvisioning,
-
-    /// <summary>
     /// The activation failed
     /// </summary>
     ActivationFailed,
-
-    /// <summary>
-    /// The pending unsubscribe
-    /// </summary>
-    PendingUnsubscribe,
 
     /// <summary>
     /// Provisioning Failed
@@ -51,9 +46,29 @@ public enum SubscriptionStatusEnumExtension
     ProvisioningFailed,
 
     /// <summary>
+    /// The pending unsubscribe
+    /// </summary>
+    PendingUnsubscribe,
+
+    /// <summary>
     /// The unsubscribe failed
     /// </summary>
     UnsubscribeFailed,
+
+    /// <summary>
+    /// The pending deprovisioning
+    /// </summary>
+    PendingDeprovisioning,
+
+    /// <summary>
+    /// The deprovisioned
+    /// </summary>
+    Deprovisioned,
+
+    /// <summary>
+    /// Deprovisioning Failed
+    /// </summary>
+    DeprovisioningFailed,
 
     /// <summary>
     /// The Suspend 

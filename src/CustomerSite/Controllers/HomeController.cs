@@ -179,6 +179,7 @@ public class HomeController : BaseController
 
         this.unsubscribeStatusHandlers = new UnsubscribeStatusHandler(
             apiService,
+            provisioningApiService,
             subscriptionRepo,
             subscriptionLogsRepo,
             planRepository,

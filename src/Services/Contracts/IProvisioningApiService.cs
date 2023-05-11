@@ -12,4 +12,5 @@ namespace Marketplace.SaaS.Accelerator.Services.Contracts;
 public interface IProvisioningApiService
 {
     Task<object> ProvisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName);
+    Task<object> DeprovisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName);
 }

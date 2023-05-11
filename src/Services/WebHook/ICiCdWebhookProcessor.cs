@@ -14,7 +14,7 @@ public interface ICiCdWebhookProcessor
     /// Processes the Web hook notification asynchronous.
     /// </summary>
     /// <param name="subscriptionId">Subscription ID.</param>
-    /// <param name="status">Status of the pipeline</param>
+    /// <param name="pipelineStatus">Status of the pipeline</param>
     /// <returns>Processes the CI/CD Web hook notification</returns>
-    Task ProcessWebhookNotificationAsync(Guid subscriptionId, PipelineStatus status);
+    Task ProcessWebhookNotificationAsync(Guid subscriptionId, PipelineOperation pipelineOperation, PipelineStatus pipelineStatus);
 }

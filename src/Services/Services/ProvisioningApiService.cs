@@ -85,4 +85,59 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
             }
         }
     }
+
+    /// <summary>
+    /// Deprovisions the subscription.
+    /// </summary>
+    /// <returns>
+    /// Data of created pipeline.
+    /// </returns>
+    public async Task<object> DeprovisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName)
+    {
+        this.Logger?.Info($"Inside DeprovisionSubscriptionAsync() of ProvisioningApiService, trying to Deprovision Subscription :: {subscriptionId}");
+
+        var tenant = new ProvisioningTenant()
+        {
+            Corporation = "Adacta Fintech",
+            Company = companyName,
+            TenantType = "sandbox",
+            TenantName = tenantName,
+            AdinsureConfigurationVersion = "19.1.3",
+            RequireModifyApproval = false,
+            RequirePatchApproval = false,
+            DatabasePasswordSerial = 1681707929,
+        };
+
+        var serializeOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        var requestUrl = string.Format(this.ClientConfiguration.ProvisionAPIBaseUrl, this.ClientConfiguration.ProvisionToken);
+        var parameters = new Dictionary<string, string> {
+            { "token", this.ClientConfiguration.ProvisionToken },
+            { "ref", this.ClientConfiguration.ProvisionBranch },
+            { "variables[OPERATION]", "destroy"},
+            { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
+            { "variables[CLIENT_REF]", subscriptionId.ToString()},
+            { "variables[TEST_PIPELINE]", "true"},
+        };
+        var encodedContent = new FormUrlEncodedContent(parameters);
+
+        using (var httpClient = new HttpClient())
+        using (var httpResonse = await httpClient.PostAsync(requestUrl, encodedContent))
+        {
+            try
+            {
+                httpResonse.EnsureSuccessStatusCode();
+
+                return await httpResonse.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException hre)
+            {
+                this.Logger?.Error($"Error while completing the deprovisioning request with Code: {httpResonse.StatusCode}, Message: " + JsonSerializer.Serialize(new { Error = hre.Message, }));
+                throw new MarketplaceException("Deprovisioning request failed, please check logs!");
+            }
+        }
+    }
 }

@@ -13,6 +13,16 @@ public enum SubscriptionStatusEnum
     PendingFulfillmentStart,
 
     /// <summary>
+    /// Pending Activation
+    /// </summary>
+    PendingActivation,
+
+    /// <summary>
+    /// Pending Provisioning
+    /// </summary>
+    PendingProvisioning,
+
+    /// <summary>
     /// The subscribed
     /// </summary>
     Subscribed,
@@ -21,16 +31,6 @@ public enum SubscriptionStatusEnum
     /// The unsubscribed
     /// </summary>
     Unsubscribed,
-
-    /// <summary>
-    /// Pending Provisioning
-    /// </summary>
-    PendingProvisioning,
-
-    /// <summary>
-    /// Pending Activation
-    /// </summary>
-    PendingActivation,
 
     /// <summary>
     /// Pending Activation
