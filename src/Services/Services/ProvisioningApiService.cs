@@ -120,7 +120,7 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
             { "variables[OPERATION]", "destroy"},
             { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
             { "variables[CLIENT_REF]", subscriptionId.ToString()},
-            { "variables[TEST_PIPELINE]", "true"},
+            //{ "variables[TEST_PIPELINE]", "true"},
         };
         var encodedContent = new FormUrlEncodedContent(parameters);
 
