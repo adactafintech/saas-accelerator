@@ -3,8 +3,8 @@
 
 
 # dotnet tool install --global dotnet-ef; `
-git clone https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator.git -b 6.1.2 --depth 1; `
-cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
+git clone https://github.com/adactafintech/saas-accelerator.git -b 6.1.2 --depth 1; `
+cd ./saas-accelerator/deployment; `
 .\Deploy.ps1 `
  -WebAppNamePrefix "adi-dev-sa" `
  -ResourceGroupForDeployment "rg-saas-accelerator-dev" `
@@ -19,8 +19,8 @@ cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
 
 
 
-git clone https://github.com/Azure/Commercial-Marketplace-SaaS-Accelerator.git -b 6.1.2 --depth 1; `
-cd ./Commercial-Marketplace-SaaS-Accelerator/deployment; `
+git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-01 --depth 1; `
+cd ./saas-accelerator/deployment; `
 .\Upgrade.ps1 `
  -WebAppNamePrefix "adi-dev-sa" `
  -ResourceGroupForDeployment "rg-saas-accelerator-dev"

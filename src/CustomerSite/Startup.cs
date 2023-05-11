@@ -108,7 +108,8 @@ public class Startup
 
         services
             .AddSingleton<IFulfillmentApiService>(new FulfillmentApiService(new MarketplaceSaaSClient(fulfillmentBaseApi, creds), config, new FulfillmentApiClientLogger()))
-            .AddSingleton<SaaSApiClientConfiguration>(config);
+            .AddSingleton<SaaSApiClientConfiguration>(config)
+            .AddSingleton<IProvisioningApiService>(new ProvisioningApiService(config, new ProvisioningApiClientLogger()));
 
         services
             .AddDbContext<SaasKitContext>(options => options.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection")));
