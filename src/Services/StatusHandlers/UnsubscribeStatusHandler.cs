@@ -87,7 +87,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
         {
             try
             {
-                // var subscriptionData = this.fulfillmentApiService.DeleteSubscriptionAsync(subscriptionID, subscription.AmpplanId).ConfigureAwait(false).GetAwaiter().GetResult();
+                var subscriptionData = this.fulfillmentApiService.DeleteSubscriptionAsync(subscriptionID, subscription.AmpplanId).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.Unsubscribed.ToString(), false);
 

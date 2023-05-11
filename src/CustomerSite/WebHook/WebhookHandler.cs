@@ -72,6 +72,11 @@ public class WebHookHandler : IWebhookHandler
     private readonly IFulfillmentApiService fulfillApiService;
 
     /// <summary>
+    /// Provisioning API client.
+    /// </summary>
+    private readonly IProvisioningApiService provisioningApiService;
+
+    /// <summary>
     /// The users repository.
     /// </summary>
     private readonly IUsersRepository usersRepository;
@@ -82,6 +87,8 @@ public class WebHookHandler : IWebhookHandler
     private readonly ISubscriptionLogRepository subscriptionsLogRepository;
 
     private readonly ISubscriptionStatusHandler notificationStatusHandlers;
+
+    private readonly ISubscriptionStatusHandler unsubscribeStatusHandler;
 
     private readonly ILoggerFactory loggerFactory;
 
@@ -103,6 +110,7 @@ public class WebHookHandler : IWebhookHandler
     /// <param name="offersAttributeRepository">The offers attribute repository.</param>
     /// <param name="offersRepository">The offers repository.</param>
     /// <param name="fulfillApiClient">The fulfill API client.</param>
+    /// <param name="provisioningApiService">The provisioning API client.</param>
     /// <param name="usersRepository">The users repository.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     /// <param name="emailService">The email service.</param>
@@ -116,7 +124,8 @@ public class WebHookHandler : IWebhookHandler
                           IPlansRepository planRepository, 
                           IOfferAttributesRepository offersAttributeRepository, 
                           IOffersRepository offersRepository, 
-                          IFulfillmentApiService fulfillApiService, 
+                          IFulfillmentApiService fulfillApiService,
+                          IProvisioningApiService provisioningApiService,
                           IUsersRepository usersRepository, 
                           ILoggerFactory loggerFactory, 
                           IEmailService emailService, 
@@ -131,6 +140,7 @@ public class WebHookHandler : IWebhookHandler
         this.subscriptionsLogRepository = subscriptionsLogRepository;
         this.applicationLogService = new ApplicationLogService(this.applicationLogRepository);
         this.subscriptionService = new SubscriptionService(this.subscriptionsRepository, this.planRepository);
+        this.provisioningApiService = provisioningApiService;
         this.emailService = emailService;
         this.loggerFactory = loggerFactory;
         this.usersRepository = usersRepository;
@@ -154,6 +164,14 @@ public class WebHookHandler : IWebhookHandler
             offersRepository,
             emailService,
             this.loggerFactory.CreateLogger<NotificationStatusHandler>());
+        this.unsubscribeStatusHandler = new UnsubscribeStatusHandler(
+            fulfillApiService,
+            provisioningApiService,
+            subscriptionsRepository,
+            subscriptionsLogRepository,
+            planRepository,
+            usersRepository,
+            this.loggerFactory.CreateLogger<UnsubscribeStatusHandler>());
     }
 
     /// <summary>
@@ -327,8 +345,8 @@ public class WebHookHandler : IWebhookHandler
     public async Task UnsubscribedAsync(WebhookPayload payload)
     {
         var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-        this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.Unsubscribed.ToString(), false);
-        await this.applicationLogService.AddApplicationLog("Offer Successfully UnSubscribed.").ConfigureAwait(false);
+        this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), false);
+        await this.applicationLogService.AddApplicationLog("Offer placed in PendingUnsubscribe status.").ConfigureAwait(false);
 
         if (oldValue != null)
         {
@@ -336,13 +354,15 @@ public class WebHookHandler : IWebhookHandler
             {
                 Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
                 SubscriptionId = oldValue.SubscribeId,
-                NewValue = Convert.ToString(SubscriptionStatusEnum.Unsubscribed),
+                NewValue = Convert.ToString(SubscriptionStatusEnumExtension.PendingUnsubscribe),
                 OldValue = Convert.ToString(oldValue.SubscriptionStatus),
                 CreateBy = null,
                 CreateDate = DateTime.Now,
             };
             this.subscriptionsLogRepository.Save(auditLog);
         }
+
+        this.unsubscribeStatusHandler.Process(payload.SubscriptionId);
 
         this.notificationStatusHandlers.Process(payload.SubscriptionId);
 
