@@ -105,7 +105,9 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
                         this.logger?.LogInformation($"{parameter.DisplayName} ::  {parameter.Value}");
                     }
                 }
-
+                this.logger?.LogInformation($"param1 :: {subscriptionID}");
+                this.logger?.LogInformation($"param2 :: {subscriptionParameters[0].Value}");
+                this.logger?.LogInformation($"param2 :: {subscriptionParameters[1].Value}");
                 var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID, subscriptionParameters[0].Value, subscriptionParameters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.logger?.LogInformation("UpdateWebJobSubscriptionStatus");

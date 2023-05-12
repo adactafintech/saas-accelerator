@@ -39,6 +39,8 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
     /// </returns>
     public async Task<object> ProvisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName)
     {
+        this.Logger?.Info("ProvisioningApiService starting provisioning");
+
         this.Logger?.Info($"Inside ProvisionSubscriptionAsync() of ProvisioningApiService, trying to Provision Subscription :: {subscriptionId}");
 
         var tenant = new ProvisioningTenant()
