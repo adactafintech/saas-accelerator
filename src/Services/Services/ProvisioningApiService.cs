@@ -60,7 +60,7 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        var requestUrl = string.Format(this.ClientConfiguration.ProvisionAPIBaseUrl, this.ClientConfiguration.ProvisionToken);
+        // var requestUrl = string.Format(this.ClientConfiguration.ProvisionAPIBaseUrl, this.ClientConfiguration.ProvisionToken);
         var parameters = new Dictionary<string, string> {
             { "token", this.ClientConfiguration.ProvisionToken },
             { "ref", this.ClientConfiguration.ProvisionBranch },
@@ -73,7 +73,7 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
         var encodedContent = new FormUrlEncodedContent(parameters);
 
         using (var httpClient = new HttpClient())
-        using (var httpResonse = await httpClient.PostAsync(requestUrl, encodedContent))
+        using (var httpResonse = await httpClient.PostAsync(this.ClientConfiguration.ProvisionAPIBaseUrl, encodedContent))
         {
             try
             {
