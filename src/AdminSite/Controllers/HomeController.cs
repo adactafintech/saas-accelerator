@@ -427,6 +427,7 @@ public class HomeController : BaseController
 
             if (operation == "Deactivate")
             {
+                this.logger?.LogInformation($"ProvisionAPIBaseUrl :: {this.saaSApiClientConfiguration.ProvisionAPIBaseUrl}");
                 this.subscriptionRepository.UpdateStatusForSubscription(subscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), true);
                 SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
                 {
