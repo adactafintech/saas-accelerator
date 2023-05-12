@@ -117,7 +117,7 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
             }
             catch (Exception ex)
             {
-                string errorDescriptin = string.Format("Exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescriptin = string.Format("Exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.logger?.LogInformation(errorDescriptin);
 
                 this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.PendingProvisioning.ToString(), false);

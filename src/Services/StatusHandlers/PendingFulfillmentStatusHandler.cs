@@ -69,7 +69,7 @@ public class PendingFulfillmentStatusHandler : AbstractSubscriptionStatusHandler
     /// <param name="subscriptionID">The subscription identifier.</param>
     public override void Process(Guid subscriptionID)
     {
-        this.logger?.LogInformation("PendingActivationStatusHandler {0}", subscriptionID);
+        this.logger?.LogInformation("PendingFulfillmentStatusHandler {0}", subscriptionID);
         var subscription = this.GetSubscriptionById(subscriptionID);
         this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
         this.logger?.LogInformation("Get User");
@@ -94,7 +94,7 @@ public class PendingFulfillmentStatusHandler : AbstractSubscriptionStatusHandler
             }
             catch (Exception ex)
             {
-                string errorDescription = string.Format("Exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescription = string.Format("Exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
 
                 this.logger?.LogInformation(errorDescription);
 

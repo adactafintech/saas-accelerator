@@ -204,7 +204,7 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
             }
             catch (Exception ex)
             {
-                string errorDescriptin = string.Format("Exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescriptin = string.Format("Exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, errorDescriptin, SubscriptionStatusEnumExtension.ActivationFailed.ToString());
                 this.logger?.LogInformation(errorDescriptin);
 

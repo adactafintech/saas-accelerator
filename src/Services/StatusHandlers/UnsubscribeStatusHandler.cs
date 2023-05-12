@@ -76,7 +76,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
     /// <param name="subscriptionID">The subscription identifier.</param>
     public override void Process(Guid subscriptionID)
     {
-        this.logger?.LogInformation("PendingActivationStatusHandler {0}", subscriptionID);
+        this.logger?.LogInformation("UnsubscribeStatusHandler {0}", subscriptionID);
         var subscription = this.GetSubscriptionById(subscriptionID);
         this.logger?.LogInformation("Result subscription : {0}", JsonSerializer.Serialize(subscription.AmpplanId));
 
@@ -106,7 +106,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
             }
             catch (Exception ex)
             {
-                string errorDescriptin = string.Format("Unsubscribe exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescriptin = string.Format("Unsubscribe exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.subscriptionLogRepository.LogStatusDuringProvisioning(subscriptionID, errorDescriptin, SubscriptionStatusEnumExtension.UnsubscribeFailed.ToString());
                 this.logger?.LogInformation(errorDescriptin);
 
@@ -130,7 +130,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
             try
             {
                 SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
-                this.logger?.LogInformation("Deplovisioning tenant {0}", subscriptionID);
+                this.logger?.LogInformation("Deprovisioning tenant {0}", subscriptionID);
 
                 subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionID);
                 Plans planDetail = this.plansRepository.GetById(subscriptionDetail.PlanId);
@@ -155,7 +155,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
             }
             catch (Exception ex)
             {
-                string errorDescriptin = string.Format("Deprovision exception: {0} :: Innser Exception:{1}", ex.Message, ex.InnerException);
+                string errorDescriptin = string.Format("Deprovision exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.subscriptionLogRepository.LogStatusDuringProvisioning(subscriptionID, errorDescriptin, SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString());
                 this.logger?.LogInformation(errorDescriptin);
 
