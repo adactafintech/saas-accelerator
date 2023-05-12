@@ -129,6 +129,7 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
             {
                 string errorDescriptin = string.Format("Exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.logger?.LogInformation(errorDescriptin);
+                this.logger?.LogInformation(ex.StackTrace);
 
                 this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.ProvisioningFailed.ToString(), false);
 
