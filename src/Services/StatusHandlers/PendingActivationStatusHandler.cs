@@ -95,10 +95,18 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
                 // var oldValue = this.subscriptionService.GetPartnerSubscription(this.CurrentUserEmailAddress, subscriptionID, true).FirstOrDefault();
                 subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionID);
                 Plans planDetail = this.planRepository.GetById(subscriptionDetail.PlanId);
-                var subscriptionParmaeters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionID, planDetail.PlanGuid);
+                var subscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionID, planDetail.PlanGuid);
 
+                this.logger?.LogInformation($"Number of parameters ::  {subscriptionParameters?.Count}");
+                if (subscriptionParameters?.Count > 0)
+                {
+                    foreach(var parameter in subscriptionParameters)
+                    {
+                        this.logger?.LogInformation($"{parameter.DisplayName} ::  {parameter.Value}");
+                    }
+                }
 
-                var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID, subscriptionParmaeters[0].Value, subscriptionParmaeters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
+                var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID, subscriptionParameters[0].Value, subscriptionParameters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.logger?.LogInformation("UpdateWebJobSubscriptionStatus");
 
@@ -120,14 +128,14 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
                 string errorDescriptin = string.Format("Exception: {0} :: Inner Exception:{1}", ex.Message, ex.InnerException);
                 this.logger?.LogInformation(errorDescriptin);
 
-                this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.PendingProvisioning.ToString(), false);
+                this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.ProvisioningFailed.ToString(), false);
 
                 // Set the status as ActivationFailed.
                 SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
                 {
                     Attribute = SubscriptionLogAttributes.Status.ToString(),
                     SubscriptionId = subscription.Id,
-                    NewValue = SubscriptionStatusEnumExtension.PendingProvisioning.ToString(),
+                    NewValue = SubscriptionStatusEnumExtension.ProvisioningFailed.ToString(),
                     OldValue = subscription.SubscriptionStatus,
                     CreateBy = userdeatils.UserId,
                     CreateDate = DateTime.Now,
