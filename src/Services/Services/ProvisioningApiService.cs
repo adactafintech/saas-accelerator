@@ -65,6 +65,7 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
             { "variables[OPERATION]", "provision"},
             { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
             { "variables[CLIENT_REF]", subscriptionId.ToString()},
+            { "variables[PIPELINE_NAME]", $"Tenant provision (Admin) - {tenant.Company} - {tenant.TenantName} - {tenant.AdinsureConfigurationVersion}"}
             //{ "variables[TEST_PIPELINE]", "true"},
         };
         var encodedContent = new FormUrlEncodedContent(parameters);
@@ -120,6 +121,7 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
             { "variables[OPERATION]", "destroy"},
             { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
             { "variables[CLIENT_REF]", subscriptionId.ToString()},
+            { "variables[PIPELINE_NAME]", $"Tenant deprovision (Admin) - {tenant.Company} - {tenant.TenantName} - {tenant.AdinsureConfigurationVersion}"}
             //{ "variables[TEST_PIPELINE]", "true"},
         };
         var encodedContent = new FormUrlEncodedContent(parameters);
