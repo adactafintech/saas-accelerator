@@ -177,7 +177,8 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
         var userdeatils = this.usersRepository.Get(subscription.UserId.GetValueOrDefault());
         string oldstatus = subscription.SubscriptionStatus;
 
-        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingProvisioning.ToString())
+        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingProvisioning.ToString() ||
+            subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.ProvisioningFailed.ToString())
         {
             try
             {
