@@ -54,7 +54,7 @@ public class CiCdWebhookProcessor : ICiCdWebhookProcessor
                 await this.webhookHandler.ProvisioningSuccessAsync(subscriptionId).ConfigureAwait(false);
             }
         }
-        else
+        else if (pipelineOperation == PipelineOperation.Destroy)
         {
             if (pipelineStatus == PipelineStatus.Failed ||
                 pipelineStatus == PipelineStatus.Cancelled ||
