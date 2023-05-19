@@ -18,11 +18,6 @@ public enum SubscriptionStatusEnum
     PendingActivation,
 
     /// <summary>
-    /// Pending Provisioning
-    /// </summary>
-    PendingProvisioning,
-
-    /// <summary>
     /// The subscribed
     /// </summary>
     Subscribed,

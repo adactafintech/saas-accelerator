@@ -344,27 +344,16 @@ public class WebHookHandler : IWebhookHandler
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task UnsubscribedAsync(WebhookPayload payload)
     {
+        await this.applicationLogService.AddApplicationLog($"Webhook event 'Unsubscribe' from Azure for subscriotion {payload.SubscriptionId}.").ConfigureAwait(false);
+
         var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(payload.SubscriptionId);
-        this.subscriptionService.UpdateStateOfSubscription(payload.SubscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), false);
-        await this.applicationLogService.AddApplicationLog("Offer placed in PendingUnsubscribe status.").ConfigureAwait(false);
 
-        if (oldValue != null)
+        if (oldValue.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingUnsubscribe)
         {
-            SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
-            {
-                Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-                SubscriptionId = oldValue.SubscribeId,
-                NewValue = Convert.ToString(SubscriptionStatusEnumExtension.PendingUnsubscribe),
-                OldValue = Convert.ToString(oldValue.SubscriptionStatus),
-                CreateBy = null,
-                CreateDate = DateTime.Now,
-            };
-            this.subscriptionsLogRepository.Save(auditLog);
+            this.unsubscribeStatusHandler.Process(payload.SubscriptionId);
+
+            this.notificationStatusHandlers.Process(payload.SubscriptionId);
         }
-
-        this.unsubscribeStatusHandler.Process(payload.SubscriptionId);
-
-        this.notificationStatusHandlers.Process(payload.SubscriptionId);
 
         await Task.CompletedTask;
     }

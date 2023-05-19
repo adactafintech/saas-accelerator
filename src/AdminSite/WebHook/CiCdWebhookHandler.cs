@@ -86,15 +86,6 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
     /// </summary>
     private readonly ILogger<CiCdWebHookHandler> logger;
 
-    //private readonly ILoggerFactory loggerFactory;
-
-    //private readonly IEmailService emailService;
-
-    //private readonly IOffersRepository offersRepository;
-
-    //private readonly IOfferAttributesRepository offersAttributeRepository;
-
-    //private const string AcceptSubscriptionUpdates = "AcceptSubscriptionUpdates";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WebHookHandler" /> class.
@@ -102,64 +93,20 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
     ///// <param name="applicationLogRepository">The application log repository.</param>
     /// <param name="subscriptionsLogRepository">The subscriptions log repository.</param>
     /// <param name="subscriptionsRepository">The subscriptions repository.</param>
-    ///// <param name="planRepository">The plan repository.</param>
-    ///// <param name="offersAttributeRepository">The offers attribute repository.</param>
-    ///// <param name="offersRepository">The offers repository.</param>
     /// <param name="fulfillApiClient">The fulfill API client.</param>
     /// <param name="usersRepository">The users repository.</param>
-    ///// <param name="loggerFactory">The logger factory.</param>
-    ///// <param name="emailService">The email service.</param>
-    ///// <param name="eventsRepository">The events repository.</param>
-    ///// <param name="applicationConfigRepository">The application configuration repository.</param>
-    ///// <param name="emailTemplateRepository">The email template repository.</param>
-    ///// <param name="planEventsMappingRepository">The plan events mapping repository.</param>
     public CiCdWebHookHandler(
-            //IApplicationLogRepository applicationLogRepository, 
             ISubscriptionLogRepository subscriptionsLogRepository, 
             ISubscriptionsRepository subscriptionsRepository, 
-            //IPlansRepository planRepository, 
-            //IOfferAttributesRepository offersAttributeRepository, 
-            //IOffersRepository offersRepository, 
             IFulfillmentApiService fulfillApiService, 
             IUsersRepository usersRepository, 
-            //ILoggerFactory loggerFactory, 
-            //IEmailService emailService, 
-            //IEventsRepository eventsRepository, 
-            //IApplicationConfigRepository applicationConfigRepository, 
-            //IEmailTemplateRepository emailTemplateRepository, 
-            //IPlanEventsMappingRepository planEventsMappingRepository,
             ILogger<CiCdWebHookHandler> logger
         )
     {
-        //this.applicationLogRepository = applicationLogRepository;
         this.subscriptionsRepository = subscriptionsRepository;
-        //this.planRepository = planRepository;
         this.subscriptionsLogRepository = subscriptionsLogRepository;
-        //this.applicationLogService = new ApplicationLogService(this.applicationLogRepository);
-        //this.subscriptionService = new SubscriptionService(this.subscriptionsRepository, this.planRepository);
-        //this.emailService = emailService;
-        //this.loggerFactory = loggerFactory;
         this.usersRepository = usersRepository;
-        //this.eventsRepository = eventsRepository;
-        //this.offersAttributeRepository = offersAttributeRepository;
         this.fulfillApiService = fulfillApiService;
-        //this.applicationConfigRepository = applicationConfigRepository;
-        //this.emailTemplateRepository = emailTemplateRepository;
-        //this.planEventsMappingRepository = planEventsMappingRepository;
-        //this.offersRepository = offersRepository;
-        //this.notificationStatusHandlers = new NotificationStatusHandler(
-        //    fulfillApiService,
-        //    planRepository,
-        //    applicationConfigRepository,
-        //    emailTemplateRepository,
-        //    planEventsMappingRepository,
-        //    offersAttributeRepository,
-        //    eventsRepository,
-        //    subscriptionsRepository,
-        //    usersRepository,
-        //    offersRepository,
-        //    emailService,
-        //    this.loggerFactory.CreateLogger<NotificationStatusHandler>());
         this.logger = logger;
     }
 
@@ -223,9 +170,9 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
                 };
                 this.subscriptionsLogRepository.Save(auditLog);
             }
-
-            await Task.CompletedTask;
         }
+
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -261,9 +208,9 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
             this.subscriptionsLogRepository.Save(auditLog);
 
             this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, "Provisioned", SubscriptionStatusEnumExtension.ProvisioningFailed.ToString());
-
-            await Task.CompletedTask;
         }
+
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -298,9 +245,9 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
             this.subscriptionsLogRepository.Save(auditLog);
 
             this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, "Deprovisioned", SubscriptionStatusEnumExtension.Deprovisioned.ToString());
-
-            await Task.CompletedTask;
         }
+
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -336,8 +283,8 @@ public class CiCdWebHookHandler : ICiCdWebhookHandler
             this.subscriptionsLogRepository.Save(auditLog);
 
             this.subscriptionsLogRepository.LogStatusDuringProvisioning(subscriptionId, "Deprovisioned", SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString());
-
-            await Task.CompletedTask;
         }
+
+        await Task.CompletedTask;
     }
 }
