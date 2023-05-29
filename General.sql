@@ -19,12 +19,16 @@ where PlanID = '243b5338-3663-492f-8dad-81f23f2947ef'
   and [Value] = 'Test01.2225'
 
 -- update dbo.Subscriptions
--- set SubscriptionStatus = 'Subscribed'
--- where Id = 11
+-- set SubscriptionStatus = 'Deprovisioned'
+-- where Id = 24
 
 -- update SubscriptionAttributeValues
 -- set Value = 'igor-saas-01'
 -- where ID = 1
+
+select *
+from ApplicationLog
+order by ActionTime desc
 
 SELECT
   Cast( ROW_NUMBER() OVER ( ORDER BY OA.ID) as Int)RowNumber  
