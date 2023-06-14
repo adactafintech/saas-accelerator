@@ -2,12 +2,12 @@
 # https://go.microsoft.com/fwlink/?linkid=2224222
 
 
-# dotnet tool install --global dotnet-ef; `
-git clone https://github.com/adactafintech/saas-accelerator.git -b 6.1.2 --depth 1; `
+dotnet tool install --global dotnet-ef; `
+git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-01 --depth 1; `
 cd ./saas-accelerator/deployment; `
 .\Deploy.ps1 `
- -WebAppNamePrefix "adi-dev-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator-dev" `
+ -WebAppNamePrefix "adi-sa" `
+ -ResourceGroupForDeployment "rg-saas-accelerator" `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com" `
  -Location "West Europe" 
 
