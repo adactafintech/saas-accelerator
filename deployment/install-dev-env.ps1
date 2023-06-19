@@ -11,9 +11,13 @@ dotnet tool install --global dotnet-ef; `
 git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-01 --depth 1; `
 cd ./saas-accelerator/deployment; `
 .\Deploy.ps1 `
- -WebAppNamePrefix "adi-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator" `
- -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com" `
+ -WebAppNamePrefix "adi-dev-sa" `
+ -ResourceGroupForDeployment "rg-saas-accelerator-dev" `
+ -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
+ -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline"
+ -ProvisionBranch "saas-env/prerelease"
+ -ProvisionToken "glptt-0f7d1aad5bd44c804701c630cd02917d4659892e"
+ -ProvisionWebHookToken "ac64baa3ad9884ahe493dfc6kb9077"
  -Location "West Europe" 
 
 ###### UPGRADE COMMAND
@@ -45,10 +49,35 @@ cd ./saas-accelerator/deployment; `
 
  # Allowlist IP 89.216.208.132 on server adi-dev-sa-sql
 
-###### DEV CONFIGURATION
+###### PREPROD CONFIGURATION
 
 #  {
 #     "name": "SaaSApiConfiguration__ProvisionAPIBaseURL",
+#     "value": "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline",
+#     "slotSetting": false
+#   },
+#   {
+#     "name": "SaaSApiConfiguration__ProvisionBranch",
+#     "value": "saas-env/prerelease",
+#     "slotSetting": false
+#   },
+#   {
+#     "name": "SaaSApiConfiguration__ProvisionToken",
+#     "value": "glptt-0f7d1aad5bd44c804701c630cd02917d4659892e",
+#     "value": "@Microsoft.KeyVault(VaultName=adi-dev-sa-kv;SecretName=ADApplicationSecret)"
+adisaasprov    cloud-ci-trigger-token-dev
+#     "slotSetting": false
+#   },
+#   {
+#     "name": "SaaSApiConfiguration__ProvisionWebHookToken",
+#     "value": "ac64baa3ad9884ahe493dfc6kb9077",
+#     "slotSetting": false
+#   },
+
+###### PROD CONFIGURATION
+
+# {
+#     "name": "SaaSApiConfiguration__ProvisionAPIBaseUrl",
 #     "value": "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline",
 #     "slotSetting": false
 #   },
@@ -59,36 +88,16 @@ cd ./saas-accelerator/deployment; `
 #   },
 #   {
 #     "name": "SaaSApiConfiguration__ProvisionToken",
-#     "value": "9c25baa49d9884fbe493dfc41b90ee",
+#     "value": "glptt-85f9d6c763b4f7075085c9500cbd7de126518661",
+#     "value": "@Microsoft.KeyVault(VaultName=adi-dev-sa-kv;SecretName=ADApplicationSecret)"
+adisaasprov     cloud-ci-trigger-token
 #     "slotSetting": false
 #   },
 #   {
 #     "name": "SaaSApiConfiguration__ProvisionWebHookToken",
-#     "value": "ac64baa3ad9884ahe493dfc6kb9077",
+#     "value": "bc63b143ad9ae4ahe793dfa4kb9d37",
 #     "slotSetting": false
 #   },
-
-
-{
-    "name": "SaaSApiConfiguration__ProvisionAPIBaseUrl",
-    "value": "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline",
-    "slotSetting": false
-  },
-  {
-    "name": "SaaSApiConfiguration__ProvisionBranch",
-    "value": "saas-env/release",
-    "slotSetting": false
-  },
-  {
-    "name": "SaaSApiConfiguration__ProvisionToken",
-    "value": "9c25baa49d9884fbe493dfc41b90ee",
-    "slotSetting": false
-  },
-  {
-    "name": "SaaSApiConfiguration__ProvisionWebHookToken",
-    "value": "ac64baa3ad9884ahe493dfc6kb9077",
-    "slotSetting": false
-  },
 
 
 ###### PROD CONFIGURATION
