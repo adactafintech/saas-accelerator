@@ -1,7 +1,7 @@
 # https://microsoft.github.io/Mastering-the-Marketplace/saas-accelerator/#setting-up-a-development-environment-for-the-saas-accelerator
 # https://go.microsoft.com/fwlink/?linkid=2224222
 
-###### FIRST DEPLOY COMMAND
+###### DEV FIRST DEPLOY COMMAND
 
 wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh; `
 chmod +x dotnet-install.sh; `
@@ -14,10 +14,36 @@ cd ./saas-accelerator/deployment; `
  -WebAppNamePrefix "adi-dev-sa" `
  -ResourceGroupForDeployment "rg-saas-accelerator-dev" `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
- -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline"
- -ProvisionBranch "saas-env/prerelease"
- -ProvisionToken "glptt-0f7d1aad5bd44c804701c630cd02917d4659892e"
- -ProvisionWebHookToken "ac64baa3ad9884ahe493dfc6kb9077"
+ -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
+ -ProvisionBranch "saas-env/prerelease" `
+ -ProvisionToken "glptt-0f7d1aad5bd44c804701c630cd02917d4659892e" `
+ -ProvisionWebHookToken "ac64baa3ad9884ahe493dfc6kb9077" `
+ -Location "West Europe" 
+
+ # AdiCloudKeyVaultName = "adisaasprovprerelease"
+ # ProvisionTokenSecretName = "ProvisionToken" -> cloud-ci-trigger-token
+ # ProvisionWebHookTokenSecretName = "ProvisionWebHookToken" -> cloud-sa-webhook-token
+    # dev = ac64baa3ad9884ahe493dfc6kb9077
+    # preprod = ac64baa3ad9884ahe493dfc6kb9077
+    # prod = bc63b143ad9ae4ahe793dfa4kb9d37
+
+###### PROD FIRST DEPLOY COMMAND
+
+wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh; `
+chmod +x dotnet-install.sh; `
+./dotnet-install.sh; `
+$ENV:PATH="$HOME/.dotnet:$ENV:PATH"; `
+dotnet tool install --global dotnet-ef; `
+git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-01 --depth 1; `
+cd ./saas-accelerator/deployment; `
+.\Deploy.ps1 `
+ -WebAppNamePrefix "adi-sa" `
+ -ResourceGroupForDeployment "rg-saas-accelerator" `
+ -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
+ -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
+ -ProvisionBranch "saas-env/release" `
+ -ProvisionToken "glptt-85f9d6c763b4f7075085c9500cbd7de126518661" `
+ -ProvisionWebHookToken "bc63b143ad9ae4ahe793dfa4kb9d37" `
  -Location "West Europe" 
 
 ###### UPGRADE COMMAND

@@ -8,10 +8,10 @@
 #.\Deploy.ps1 `
 # -WebAppNamePrefix "amp_saas_accelerator_<unique>" `
 # -Location "<region>" `
-# -PublisherAdminUsers "<your@email.address>"
-# -ProvisionAPIBaseURL "https://<your-gitlab-url/api/v4/projects/<your-gitlab-project-id>/trigger/pipeline"
-# -ProvisionBranch "<your-gitlab-branch>"
-# -ProvisionToken "<your-gitlab-pripeline-token>"
+# -PublisherAdminUsers "<your@email.address>" `
+# -ProvisionAPIBaseURL "https://<your-gitlab-url/api/v4/projects/<your-gitlab-project-id>/trigger/pipeline" `
+# -ProvisionBranch "<your-gitlab-branch>" `
+# -ProvisionToken "<your-gitlab-pripeline-token>" `
 # -ProvisionWebHookToken "<your-webhook-token>"
 
 Param(  
