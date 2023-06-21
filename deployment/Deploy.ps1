@@ -11,8 +11,9 @@
 # -PublisherAdminUsers "<your@email.address>" `
 # -ProvisionAPIBaseURL "https://<your-gitlab-url/api/v4/projects/<your-gitlab-project-id>/trigger/pipeline" `
 # -ProvisionBranch "<your-gitlab-branch>" `
-# -ProvisionToken "<your-gitlab-pripeline-token>" `
-# -ProvisionWebHookToken "<your-webhook-token>"
+# -AdiCloudKeyVaultName "<your-adi-cloud-keyvault>" `
+# -ProvisionTokenSecretName "<your-provision-token-secret-name>"
+# -ProvisionWebHookTokenSecretName "<your-provision-webhook-token-secret-name>"
 
 Param(  
    [string][Parameter(Mandatory)]$WebAppNamePrefix, # Prefix used for creating web applications
@@ -21,8 +22,9 @@ Param(
    [string][Parameter(Mandatory)]$PublisherAdminUsers, # Provide a list of email addresses (as comma-separated-values) that should be granted access to the Publisher Portal
    [string][Parameter(Mandatory)]$ProvisionAPIBaseURL, # Gitlab API base URL for provisioning pipeline triggering
    [string][Parameter(Mandatory)]$ProvisionBranch, # Branch name in GitLab that has pipeline for provisioning
-   [string][Parameter(Mandatory)]$ProvisionToken, # Gitlab pipeline trigger token
-   [string][Parameter(Mandatory)]$ProvisionWebHookToken, # Token for webhook to receive provisioning status update
+   [string][Parameter(Mandatory)]$AdiCloudKeyVaultName, # Name of the keyvault in AdInsure Cloud's environment with secrets
+   [string][Parameter(Mandatory)]$ProvisionTokenSecretName, # Name of the secret that stores Provision Token
+   [string][Parameter(Mandatory)]$ProvisionWebHookTokenSecretName, # Name of the secret that stored Provision WebHook Token
    [string][Parameter()]$TenantID, # The value should match the value provided for Active Directory TenantID in the Technical Configuration of the Transactable Offer in Partner Center
    [string][Parameter()]$AzureSubscriptionID, # Subscription where the resources be deployed
    [string][Parameter()]$ADApplicationID, # The value should match the value provided for Active Directory Application ID in the Technical Configuration of the Transactable Offer in Partner Center
@@ -283,6 +285,8 @@ $WebAppNameAdmin=$WebAppNamePrefix+"-admin"
 $WebAppNamePortal=$WebAppNamePrefix+"-portal"
 
 #keep the space at the end of the string - bug in az cli running on windows powershell truncates last char https://github.com/Azure/azure-cli/issues/10066
+$ProvisionToken="@Microsoft.KeyVault(VaultName=$AdiCloudKeyVaultName;SecretName=$ProvisionTokenSecretName) "
+$ProvisionWebHookToken="@Microsoft.KeyVault(VaultName=$AdiCloudKeyVaultName;SecretName=$ProvisionWebHookTokenSecretName) "
 $ADApplicationSecretKeyVault="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=ADApplicationSecret) "
 $DefaultConnectionKeyVault="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=DefaultConnection) "
 $ServerUri = $SQLServerName+".database.windows.net"
@@ -324,6 +328,8 @@ Write-host "      ➡️ Assign Identity"
 $WebAppNameAdminId = az webapp identity assign -g $ResourceGroupForDeployment  -n $WebAppNameAdmin --identities [system] --query principalId -o tsv
 Write-host "      ➡️ Setup access to KeyVault"
 az keyvault set-policy --name $KeyVault  --object-id $WebAppNameAdminId --secret-permissions get list --key-permissions get list --output $azCliOutput
+Write-host "      ➡️ Setup access to AdiCloudKeyVault"
+az keyvault set-policy --name $AdiCloudKeyVault  --object-id $WebAppNameAdminId --secret-permissions get list --key-permissions get list --output $azCliOutput
 Write-host "      ➡️ Set Configuration"
 az webapp config connection-string set -g $ResourceGroupForDeployment -n $WebAppNameAdmin -t SQLAzure --output $azCliOutput --settings DefaultConnection=$DefaultConnectionKeyVault 
 az webapp config appsettings set -g $ResourceGroupForDeployment  -n $WebAppNameAdmin --output $azCliOutput --settings KnownUsers=$PublisherAdminUsers SaaSApiConfiguration__AdAuthenticationEndPoint=https://login.microsoftonline.com SaaSApiConfiguration__ClientId=$ADApplicationID SaaSApiConfiguration__ClientSecret=$ADApplicationSecretKeyVault SaaSApiConfiguration__FulFillmentAPIBaseURL=https://marketplaceapi.microsoft.com/api SaaSApiConfiguration__FulFillmentAPIVersion=2018-08-31 SaaSApiConfiguration__GrantType=client_credentials SaaSApiConfiguration__MTClientId=$ADMTApplicationID SaaSApiConfiguration__Resource=20e940b3-4c77-4b0b-9a53-9e16a1b010a7 SaaSApiConfiguration__TenantId=$TenantID SaaSApiConfiguration__SignedOutRedirectUri=https://$WebAppNamePrefix-portal.azurewebsites.net/Home/Index/ SaaSApiConfiguration__SupportmeteredBilling=$MeteredSchedulerSupport SaaSApiConfiguration_CodeHash=$SaaSApiConfiguration_CodeHash SaaSApiConfiguration__ProvisionAPIBaseURL=$ProvisionAPIBaseURL SaaSApiConfiguration__ProvisionBranch=$ProvisionBranch SaaSApiConfiguration__ProvisionToken=$ProvisionToken SaaSApiConfiguration__ProvisionWebHookToken=$ProvisionWebHookToken
@@ -336,6 +342,8 @@ Write-host "      ➡️ Assign Identity"
 $WebAppNamePortalId= az webapp identity assign -g $ResourceGroupForDeployment  -n $WebAppNamePortal --identities [system] --query principalId -o tsv 
 Write-host "      ➡️ Setup access to KeyVault"
 az keyvault set-policy --name $KeyVault  --object-id $WebAppNamePortalId --secret-permissions get list --key-permissions get list --output $azCliOutput
+Write-host "      ➡️ Setup access to AdiCloudKeyVault"
+az keyvault set-policy --name $AdiCloudKeyVault  --object-id $WebAppNamePortalId --secret-permissions get list --key-permissions get list --output $azCliOutput
 Write-host "      ➡️ Set Configuration"
 az webapp config connection-string set -g $ResourceGroupForDeployment -n $WebAppNamePortal -t SQLAzure --output $azCliOutput --settings DefaultConnection=$DefaultConnectionKeyVault
 az webapp config appsettings set -g $ResourceGroupForDeployment  -n $WebAppNamePortal --output $azCliOutput --settings SaaSApiConfiguration__AdAuthenticationEndPoint=https://login.microsoftonline.com SaaSApiConfiguration__ClientId=$ADApplicationID SaaSApiConfiguration__ClientSecret=$ADApplicationSecretKeyVault SaaSApiConfiguration__FulFillmentAPIBaseURL=https://marketplaceapi.microsoft.com/api SaaSApiConfiguration__FulFillmentAPIVersion=2018-08-31 SaaSApiConfiguration__GrantType=client_credentials SaaSApiConfiguration__MTClientId=$ADMTApplicationID SaaSApiConfiguration__Resource=20e940b3-4c77-4b0b-9a53-9e16a1b010a7 SaaSApiConfiguration__TenantId=$TenantID SaaSApiConfiguration__SignedOutRedirectUri=https://$WebAppNamePrefix-portal.azurewebsites.net/Home/Index/ SaaSApiConfiguration_CodeHash=$SaaSApiConfiguration_CodeHash SaaSApiConfiguration__ProvisionAPIBaseURL=$ProvisionAPIBaseURL SaaSApiConfiguration__ProvisionBranch=$ProvisionBranch SaaSApiConfiguration__ProvisionToken=$ProvisionToken SaaSApiConfiguration__ProvisionWebHookToken=$ProvisionWebHookToken
