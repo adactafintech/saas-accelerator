@@ -10,6 +10,7 @@
 - Reserved `WebAppNamePredix` values are: `adi-sa-kv` (prod), `adi-dev-sa-kv` (preprod).
 - Reserved `ResourceGroupForDeployment` values are: `rg-saas-accelerator` (prod), `rg-saas-accelerator-dev` (preprod).
 - AZ user that executes deployment should have permission to set policy on AdInsure Cloud KeyVault, that will grant `get` and `list` permission to secrets to Customer and Admin portal identities.
+- AZ user should have permission to create App Registration on the tenant's AZ AD.
 
 ## Installation
 
@@ -43,6 +44,8 @@ cd ./saas-accelerator/deployment; `
  -Location "West Europe" 
 ```
 
+After deployment, you should [configure SaaS Accelerator](#configuration). This step is common for all environments.
+
 ### Prod Installation
 
 ```bash
@@ -64,6 +67,52 @@ cd ./saas-accelerator/deployment; `
  -ProvisionWebHookTokenSecretName "cloud-sa-webhook-token" `
  -Location "West Europe" 
 ```
+
+After deployment, you should [configure SaaS Accelerator](#configuration). This step is common for all environments.
+
+## Configuration
+
+### Configure AZ Marketplace
+
+1. Open AZ Marketplace
+2. Open SaaS offer that you want to connect with SaaS Accelerator.
+3. Open `Technical Configuration` page from the menu.
+4. In four input fields enter four output values that `Deploy.ps1` provided at the end. If you lost these values, please check [Troubleshooting](#troubleshooting) section for instructions how to find them.
+5. Review and Publish the offer.
+
+### Configure SaaS Accelerator
+
+#### Configure Custom Fields
+
+> **Note:** To be able to do this, you have to have at least one Offer in AZ Marketplace that is connected with this SaaS Accelerator.
+
+1. Open Admin application
+2. Open Offer section from the main menu.
+3. Select Offer that you want to configure.
+4. Add following fields (`TenantName`, `CompanyName`, `ContactFirstName`, `ContactLastName`) ![Custom Fields](./images/adinsure-custom-fields.png)
+5. Save changes on the offer.
+6. Open Plan section from the main menu.
+7. Select Plan that is related to the previously configured offer.
+8. Mark all properties on the plan to be `Enable`.
+9. Save changes on the plan.
+
+#### Configure Events
+
+TBD
+
+#### Configure Email
+
+TBD
+
+#### Configure Admins
+
+> **Note:** As parameters of the `Deploy.ps1` you specified list of admins. If you need to change that open Admin app and in Settings correct list of admin emails.
+
+### Configure GitLab
+
+#### Configure Webhook
+
+TBD
 
 ## Upgrade
 
@@ -173,7 +222,7 @@ TBD -->
 
 ➡️ Tenant ID:                  cdeb9156-219a-49e3-b414-f63acd298e9c
 
-➡️ AAD Application ID section: 11b97a06-846d-45eb-83d2-121e54027a13
+➡️ AAD Application ID section: 0c80fe88-6253-432a-b6d7-63d1b5f4842d
 
 ### Prod Technical Details
 
