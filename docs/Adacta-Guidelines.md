@@ -37,20 +37,10 @@ cd ./saas-accelerator/deployment; `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
  -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
  -ProvisionBranch "saas-env/prerelease" `
- -ProvisionToken "glptt-0f7d1aad5bd44c804701c630cd02917d4659892e" `
- -ProvisionWebHookToken "ac64baa3ad9884ahe493dfc6kb9077" `
+ -AdiCloudKeyVaultName "adisaasprovprerelease" `
+ -ProvisionTokenSecretName "cloud-ci-trigger-token" `
+ -ProvisionWebHookTokenSecretName "cloud-sa-webhook-token" `
  -Location "West Europe" 
-```
-
-Next change is to replace `ProvisionToken` and `ProvisionWebHookToken` parameters with following parameters:
-
-```bash
- # AdiCloudKeyVaultName = "adisaasprovprerelease"
- # ProvisionTokenSecretName = "ProvisionToken" -> cloud-ci-trigger-token
- # ProvisionWebHookTokenSecretName = "ProvisionWebHookToken" -> cloud-sa-webhook-token
-    # dev = ac64baa3ad9884ahe493dfc6kb9077
-    # preprod = ac64baa3ad9884ahe493dfc6kb9077
-    # prod = bc63b143ad9ae4ahe793dfa4kb9d37
 ```
 
 ### Prod Installation
@@ -69,8 +59,9 @@ cd ./saas-accelerator/deployment; `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
  -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
  -ProvisionBranch "saas-env/release" `
- -ProvisionToken "glptt-85f9d6c763b4f7075085c9500cbd7de126518661" `
- -ProvisionWebHookToken "bc63b143ad9ae4ahe793dfa4kb9d37" `
+ -AdiCloudKeyVaultName "adisaasprovrelease" `
+ -ProvisionTokenSecretName "cloud-ci-trigger-token" `
+ -ProvisionWebHookTokenSecretName "cloud-sa-webhook-token" `
  -Location "West Europe" 
 ```
 
@@ -117,6 +108,29 @@ cd ./saas-accelerator/deployment; `
 3. Delete `./saas-accelerator` folder in the `home/<username>` folder of Azure Web Console.
 4. Delete `./dotnet*` file(s) in the `home/<username>` folder of Azure Web Console.
 5. Purge keyvault (it is soft-deleted within resource group) with command: `az keyvault purge --name <keyvault-name` (e.g. `adi-dev-sa-kv`, `adi-sa-kv`).
+
+<!-- ### Dev Deletion
+
+TBD
+
+### Preprod Deletion
+
+```bash
+# wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh; `
+# chmod +x dotnet-install.sh; `
+# ./dotnet-install.sh; `
+# $ENV:PATH="$HOME/.dotnet:$ENV:PATH"; `
+# dotnet tool install --global dotnet-ef; `
+git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-01 --depth 1; `
+cd ./saas-accelerator/deployment; `
+.\Cleanup.ps1 `
+ -WebAppNamePrefix "adi-dev-sa" `
+ -ResourceGroupForDeployment "rg-saas-accelerator-dev"
+```
+
+### Prod Deletion
+
+TBD -->
 
 ## Troubleshooting
 

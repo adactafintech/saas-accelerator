@@ -129,6 +129,14 @@ Write-Host "🔑 Azure Subscription '$AzureSubscriptionID' selected."
 
 #endregion
 
+#region Select secrets from AdInsure Cloud keyvault
+$AdiCloudProvisionToken = az keyvault secret show --name $ProvisionTokenSecretName --vault-name $AdiCloudKeyVaultName --query value -o tsv
+Write-host "🔑 AdInsure Cloud Provision Token is '$AdiCloudProvisionToken'."
+
+$AdiCloudProvisionWebHookToken = az keyvault secret show --name $ProvisionWebHookTokenSecretName --vault-name $AdiCloudKeyVaultName --query value -o tsv
+Write-host "🔑 AdInsure Cloud Provision WebHook Token is '$AdiCloudProvisionWebHookToken'."
+#endregion
+
 #region Dowloading assets if provided
 
 # Download Publisher's PNG logo
@@ -285,8 +293,8 @@ $WebAppNameAdmin=$WebAppNamePrefix+"-admin"
 $WebAppNamePortal=$WebAppNamePrefix+"-portal"
 
 #keep the space at the end of the string - bug in az cli running on windows powershell truncates last char https://github.com/Azure/azure-cli/issues/10066
-$ProvisionToken="@Microsoft.KeyVault(VaultName=$AdiCloudKeyVaultName;SecretName=$ProvisionTokenSecretName) "
-$ProvisionWebHookToken="@Microsoft.KeyVault(VaultName=$AdiCloudKeyVaultName;SecretName=$ProvisionWebHookTokenSecretName) "
+$ProvisionToken="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=$ProvisionTokenSecretName) "
+$ProvisionWebHookToken="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=$ProvisionWebHookTokenSecretName) "
 $ADApplicationSecretKeyVault="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=ADApplicationSecret) "
 $DefaultConnectionKeyVault="@Microsoft.KeyVault(VaultName=$KeyVault;SecretName=DefaultConnection) "
 $ServerUri = $SQLServerName+".database.windows.net"
@@ -316,6 +324,9 @@ az keyvault create --name $KeyVault --resource-group $ResourceGroupForDeployment
 Write-host "      ➡️ Add Secrets"
 az keyvault secret set --vault-name $KeyVault  --name ADApplicationSecret --value $ADApplicationSecret --output $azCliOutput
 az keyvault secret set --vault-name $KeyVault  --name DefaultConnection --value $Connection --output $azCliOutput
+Write-host "      ➡️ Add Secrets from AdInsure Cloud"
+az keyvault secret set --vault-name $KeyVault  --name $ProvisionTokenSecretName --value $AdiCloudProvisionToken --output $azCliOutput
+az keyvault secret set --vault-name $KeyVault  --name $ProvisionWebHookTokenSecretName --value $AdiCloudProvisionWebHookToken --output $azCliOutput
 
 Write-host "   🔵 App Service Plan"
 Write-host "      ➡️ Create App Service Plan"
