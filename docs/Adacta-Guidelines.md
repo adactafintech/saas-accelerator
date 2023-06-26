@@ -70,6 +70,18 @@ cd ./saas-accelerator/deployment; `
 
 After deployment, you should [configure SaaS Accelerator](#configuration). This step is common for all environments.
 
+## Infrastructure Installation
+
+### Application Insights
+
+1. Create single Log Analytics Workspace for one environment (for DEV one, for PROD one). Name it with suffix `-law` (e.g. `adi-sa-law`).
+2. Create Application Insight for Admin app named like `adi-sa-admin-ai` (just add `-dev` if DEV environment). Point it to previously created Log Analytics Workspace.
+3. Create Application Insight for Customer app named like `adi-sa-portal-ai` (just add `-dev` if DEV environment). Point it to previously created Log Analytics Workspace.
+
+### Availability Test
+
+TBD
+
 ## Configuration
 
 ### Configure AZ Marketplace
@@ -87,11 +99,11 @@ After deployment, you should [configure SaaS Accelerator](#configuration). This 
 > **Note:** To be able to do this, you have to have at least one Offer in AZ Marketplace that is connected with this SaaS Accelerator.
 
 1. Open Admin application
-2. Open Offer section from the main menu.
+2. Open Offer page from the main menu.
 3. Select Offer that you want to configure.
 4. Add following fields (`TenantName`, `CompanyName`, `ContactFirstName`, `ContactLastName`) ![Custom Fields](./images/adinsure-custom-fields.png)
 5. Save changes on the offer.
-6. Open Plan section from the main menu.
+6. Open Plan page from the main menu.
 7. Select Plan that is related to the previously configured offer.
 8. Mark all properties on the plan to be `Enable`.
 9. Save changes on the plan.
@@ -102,7 +114,21 @@ TBD
 
 #### Configure Email
 
-TBD
+Configure SMPT settings:
+
+1. Open Admin application.
+2. Open Settings page from the main menu.
+3. In Application Config set values (one by one) as it is on the screenshot ![Config Email](./image/../images/email-config-example.png)
+4. Preproduction pass = "0j61GT7Se5rp8R5z7Jjt", Prod pass = "S^7uAWh5*^f7jM1V"
+
+Configure events on plans:
+
+1. Open Admin application.
+2. Open Plans page from the main menu.
+3. Select Edit option on the plan you want to configure (all should be configured).
+4. Select Events tab.
+5. Add email addresses into all events.
+6. Activate all events.
 
 #### Configure Admins
 
@@ -152,11 +178,16 @@ cd ./saas-accelerator/deployment; `
 
 ## Deletion
 
+Deletion of Azure resources:
+
 1. Delete resource group (e.g. `rg-saas-accelerator-dev`)
-2. Delete two app registrations.
-3. Delete `./saas-accelerator` folder in the `home/<username>` folder of Azure Web Console.
-4. Delete `./dotnet*` file(s) in the `home/<username>` folder of Azure Web Console.
-5. Purge keyvault (it is soft-deleted within resource group) with command: `az keyvault purge --name <keyvault-name` (e.g. `adi-dev-sa-kv`, `adi-sa-kv`).
+2. Purge keyvault (it is soft-deleted within resource group) with command: `az keyvault purge --name <keyvault-name` (e.g. `adi-dev-sa-kv`, `adi-sa-kv`).
+3. Delete two app registrations.
+
+Deletion of your Azure Web Console:
+
+1. Delete `./saas-accelerator` folder in the `home/<username>` folder of Azure Web Console.
+2. Delete `./dotnet*` file(s) in the `home/<username>` folder of Azure Web Console.
 
 <!-- ### Dev Deletion
 
@@ -287,3 +318,34 @@ adisaasprov     cloud-ci-trigger-token
      "slotSetting": false
    },
 ```
+
+### AZ Offer - Notes for Certification
+
+AdInsure Cloud for Life represents SaaS offering for insurance companies that have in their portfolio Life insurance.
+
+For testing purpose, plan "AdInsure Cloud for Life TEST" should be used.
+
+A client that subscribes to AdInsure Cloud for Life will be forwarded to the Landing page of AdInsure Cloud.
+The client will be asked to enter the following information:
+- Tenant Name - string value that will be the prefix of the DNS entry of the to-be provisioned AdInsure Cloud tenant. Validation of this value is only that it is unique (not already used) in the Cloud.
+- Company Name - string value for easier support.
+- Contact First Name - string value for easier support.
+- Contact Last Name - string value for easier support.
+
+After entering data on the Landing page, the client should press Subscribe button, and go to the Subscriptions page.
+On the Subscriptions page will be visible new subscription that client created.
+Subscription will be in status "Pending Activation", till Adacta team does not provision new tenant for this subscription.
+
+Provisioning process, on Adacta side, is automated, but it requires manual review of the subscription request and manual approval.
+When Admin approves subscription request in Admin application, provisioning is happening automatically within one hour (max).
+When the provisioning finishes following happens:
+- Client can see in Customer portal's Subscriptions page the subscription with status Activated.
+- Client will see in AZ Portal under SaaS its subscription in Activated status.
+- Client will be able to access tenant's entry page in browser on address `<entered-tenant-name>.adinsure.adacta-fintech.com`
+
+When the client does not want to use AdInsure Cloud for Life anymore, it is possible to unsubscribe in one of the following ways:
+- On Customer portal, open Subscriptions page, and select Unsubscribe option on the subscription.
+- On AZ Portal, under SaaS, select Unsubscribe on the subscription.
+
+If unsubscribing is done on Customer portal, then 
+
