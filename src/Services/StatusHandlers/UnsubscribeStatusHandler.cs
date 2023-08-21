@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Text.Json;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
@@ -136,7 +137,10 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
                 Plans planDetail = this.plansRepository.GetById(subscriptionDetail.PlanId);
                 var subscriptionParmaeters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionID, planDetail.PlanGuid);
 
-                var pipelineData = this.provisioningApiService.DeprovisionSubscriptionAsync(subscriptionID, subscriptionParmaeters[0].Value, subscriptionParmaeters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
+                var pipelineData = this.provisioningApiService.DeprovisionSubscriptionAsync(subscriptionID,
+                    subscriptionParmaeters.Where(p => p.DisplayName == "Tenant Name").Single().Value,
+                    subscriptionParmaeters.Where(p => p.DisplayName == "Customer Name").Single().Value,
+                    subscriptionParmaeters.Where(p => p.DisplayName == "Company Name").Single().Value).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.subscriptionsRepository.UpdateStatusForSubscription(subscriptionID, SubscriptionStatusEnumExtension.PendingDeprovisioning.ToString(), false);
 

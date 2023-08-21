@@ -20,6 +20,8 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
     /// </value>
     protected SaaSApiClientConfiguration ClientConfiguration { get; set; }
 
+    private JsonSerializerOptions serializeOptions { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ProvisioningApiService" /> class.
     /// </summary>
@@ -29,6 +31,10 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
         ILogger logger) : base(logger)
     {
         this.ClientConfiguration = sdkSettings;
+        this.serializeOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     /// <summary>
@@ -37,37 +43,35 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
     /// <returns>
     /// Data of created pipeline.
     /// </returns>
-    public async Task<object> ProvisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName)
+    public async Task<object> ProvisionSubscriptionAsync(Guid subscriptionId, string tenantName, string customerName, bool customerNew, string companyName, bool companyNew, string tier, string vertical)
     {
         this.Logger?.Info("ProvisioningApiService starting provisioning");
 
         this.Logger?.Info($"Inside ProvisionSubscriptionAsync() of ProvisioningApiService, trying to Provision Subscription :: {subscriptionId}");
 
-        var tenant = new ProvisioningTenant()
+        var tenantInfo = new ProvisioningTenant()
         {
-            Corporation = "Adacta Fintech",
+            Customer = customerName,
+            CustomerNew = customerNew,
             Company = companyName,
-            TenantType = "sandbox",
+            CompanyNew = companyNew,
             TenantName = tenantName,
-            AdinsureConfigurationVersion = "19.1.3",
-            RequireModifyApproval = false,
-            RequirePatchApproval = false,
+            // Tier = tier,
+            PlatformVersion = "25.0.0",
             DatabasePasswordSerial = 1681707929,
+            Vertical = vertical,
         };
 
-        var serializeOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        // var requestUrl = string.Format(this.ClientConfiguration.ProvisionAPIBaseUrl, this.ClientConfiguration.ProvisionToken);
         var parameters = new Dictionary<string, string> {
             { "token", this.ClientConfiguration.ProvisionToken },
             { "ref", this.ClientConfiguration.ProvisionBranch },
+            { "variables[API_VERSION]", "v1"},
             { "variables[OPERATION]", "provision"},
-            { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
+            { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenantInfo, this.serializeOptions)},
             { "variables[CLIENT_REF]", subscriptionId.ToString()},
-            { "variables[PIPELINE_NAME]", $"Tenant provision (Admin) - {tenant.Company} - {tenant.TenantName} - {tenant.AdinsureConfigurationVersion}"}
+            { "variables[PIPELINE_NAME]", $"Tenant provision (Admin) - {tenantInfo.Customer} - {tenantInfo.Company} - {tenantInfo.TenantName} - {tenantInfo.PlatformVersion}"}
+
+            // WARNING: use this only on not-production environments and for development
             //{ "variables[TEST_PIPELINE]", "true"},
         };
         var encodedContent = new FormUrlEncodedContent(parameters);
@@ -95,35 +99,28 @@ public class ProvisioningApiService : BaseApiService, IProvisioningApiService
     /// <returns>
     /// Data of created pipeline.
     /// </returns>
-    public async Task<object> DeprovisionSubscriptionAsync(Guid subscriptionId, string tenantName, string companyName)
+    public async Task<object> DeprovisionSubscriptionAsync(Guid subscriptionId, string tenantName, string customerName, string companyName)
     {
         this.Logger?.Info($"Inside DeprovisionSubscriptionAsync() of ProvisioningApiService, trying to Deprovision Subscription :: {subscriptionId}");
 
-        var tenant = new ProvisioningTenant()
+        var tenantInfo = new DeprovisioningTenant()
         {
-            Corporation = "Adacta Fintech",
+            Customer = customerName,
             Company = companyName,
-            TenantType = "sandbox",
             TenantName = tenantName,
-            AdinsureConfigurationVersion = "19.1.3",
-            RequireModifyApproval = false,
-            RequirePatchApproval = false,
-            DatabasePasswordSerial = 1681707929,
+            CleanupCustomerData = false,
         };
 
-        var serializeOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        //var requestUrl = string.Format(this.ClientConfiguration.ProvisionAPIBaseUrl, this.ClientConfiguration.ProvisionToken);
         var parameters = new Dictionary<string, string> {
             { "token", this.ClientConfiguration.ProvisionToken },
             { "ref", this.ClientConfiguration.ProvisionBranch },
+            { "variables[API_VERSION]", "v1"},
             { "variables[OPERATION]", "destroy"},
-            { "variables[TENANT]", JsonSerializer.Serialize<ProvisioningTenant>(tenant, serializeOptions)},
+            { "variables[TENANT]", JsonSerializer.Serialize<DeprovisioningTenant>(tenantInfo, this.serializeOptions)},
             { "variables[CLIENT_REF]", subscriptionId.ToString()},
-            { "variables[PIPELINE_NAME]", $"Tenant deprovision (Admin) - {tenant.Company} - {tenant.TenantName} - {tenant.AdinsureConfigurationVersion}"}
+            { "variables[PIPELINE_NAME]", $"Tenant deprovision (Admin) - {tenantInfo.Customer} - {tenantInfo.Company} - {tenantInfo.TenantName}"}
+
+            // WARNING: use this only on not-production environments and for development
             //{ "variables[TEST_PIPELINE]", "true"},
         };
         var encodedContent = new FormUrlEncodedContent(parameters);

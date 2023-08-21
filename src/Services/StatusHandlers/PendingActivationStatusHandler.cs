@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Text.Json;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
@@ -108,7 +109,15 @@ public class PendingActivationStatusHandler : AbstractSubscriptionStatusHandler
                 this.logger?.LogInformation($"param1 :: {subscriptionID}");
                 this.logger?.LogInformation($"param2 :: {subscriptionParameters[0].Value}");
                 this.logger?.LogInformation($"param2 :: {subscriptionParameters[1].Value}");
-                var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID, subscriptionParameters[0].Value, subscriptionParameters[1].Value).ConfigureAwait(false).GetAwaiter().GetResult();
+                var pipelineData = this.provisioningApiService.ProvisionSubscriptionAsync(subscriptionID,
+                    subscriptionParameters.Where(p => p.DisplayName == "Tenant Name").Single().Value,
+                    subscriptionParameters.Where(p => p.DisplayName == "Customer Name").Single().Value,
+                    subscriptionParameters.Where(p => p.DisplayName == "Is Customer New?").Single().Value == "Yes",
+                    subscriptionParameters.Where(p => p.DisplayName == "Company Name").Single().Value,
+                    subscriptionParameters.Where(p => p.DisplayName == "Is Company New?").Single().Value == "Yes",
+                    subscriptionParameters.Where(p => p.DisplayName == "Tier").Single().Value,
+                    subscriptionParameters.Where(p => p.DisplayName == "Vertical").Single().Value
+                ).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 this.logger?.LogInformation("UpdateWebJobSubscriptionStatus");
 

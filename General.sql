@@ -1,6 +1,6 @@
 select *
 from dbo.Subscriptions
-where AMPSubscriptionId = 'd33a68cb-5c84-4698-d5eb-284d4d8145c1'
+where AMPSubscriptionId = '78031411-a293-4113-c769-98afc849f433'
 
 select *
 from dbo.Offers
@@ -14,13 +14,13 @@ from [dbo].[OfferAttributes]
 
 select *
 from SubscriptionAttributeValues
-where PlanID = '243b5338-3663-492f-8dad-81f23f2947ef'
+where PlanID = '5c0ac747-5d69-49d4-85a5-2ed4bace2c09'
   and PlanAttributeId = 1
   and [Value] = 'Test01.2225'
 
 -- update dbo.Subscriptions
--- set SubscriptionStatus = 'Deprovisioned'
--- where Id = 24
+-- set SubscriptionStatus = 'ProvisioningFailed'
+-- where Id = 8
 
 -- update SubscriptionAttributeValues
 -- set Value = 'igor-saas-01'

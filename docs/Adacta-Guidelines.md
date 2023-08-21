@@ -101,7 +101,7 @@ TBD
 1. Open Admin application
 2. Open Offer page from the main menu.
 3. Select Offer that you want to configure.
-4. Add following fields (`TenantName`, `CompanyName`, `ContactFirstName`, `ContactLastName`) ![Custom Fields](./images/adinsure-custom-fields.png)
+4. Add following fields (`TenantName`, `CustomerName`, `CustomerNew`, `CompanyName`, `CompanyNew`, `Tier`, `Vertical`, `ContactFirstName`, `ContactLastName`) ![Custom Fields](./images/adinsure-custom-fields.png)
 5. Save changes on the offer.
 6. Open Plan page from the main menu.
 7. Select Plan that is related to the previously configured offer.
