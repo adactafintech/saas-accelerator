@@ -179,7 +179,7 @@ public class SubscriptionsRepository : ISubscriptionsRepository
         if (subscriptionId != default)
         {
             var subscriptionParameters = this.context.SubscriptionParametersOutput.FromSqlRaw("dbo.spGetSubscriptionParameters {0},{1}", subscriptionId, planId).ToList();
-            return subscriptionParameters.ToList();
+            return subscriptionParameters.OrderBy(parameter => parameter.DisplaySequence).ToList();
         }
 
         return new List<SubscriptionParametersOutput>();
