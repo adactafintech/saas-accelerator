@@ -73,7 +73,12 @@ public class Startup
             SaaSAppUrl = this.Configuration["SaaSApiConfiguration:SaaSAppUrl"],
             SignedOutRedirectUri = this.Configuration["SaaSApiConfiguration:SignedOutRedirectUri"],
             TenantId = this.Configuration["SaaSApiConfiguration:TenantId"],
-            Environment = this.Configuration["SaaSApiConfiguration:Environment"]
+            Environment = this.Configuration["SaaSApiConfiguration:Environment"],
+            SupportMeteredBilling = Convert.ToBoolean(this.Configuration["SaaSApiConfiguration:supportmeteredbilling"]),
+            ProvisionAPIBaseUrl = this.Configuration["SaaSApiConfiguration:ProvisionAPIBaseUrl"],
+            ProvisionToken = this.Configuration["SaaSApiConfiguration:ProvisionToken"],
+            ProvisionBranch = this.Configuration["SaaSApiConfiguration:ProvisionBranch"],
+            ProvisionWebHookToken = this.Configuration["SaaSApiConfiguration:ProvisionWebHookToken"],
         };
         var creds = new ClientSecretCredential(config.TenantId.ToString(), config.ClientId.ToString(), config.ClientSecret);
 

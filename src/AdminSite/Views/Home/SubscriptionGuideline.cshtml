@@ -1,0 +1,33 @@
+﻿@using Marketplace.SaaS.Accelerator.Services.Models
+@model Marketplace.SaaS.Accelerator.Services.Models.SubscriptionGuideline
+@{
+    //ViewData["Title"] = "Home";
+}
+
+<div class="container">
+    <form method="post">
+
+        <div>
+            <div class="text-left mt40">
+                <span class="cm-section-heading">Subscription Guideline</span>
+            </div>
+@*            @if (Model != null && !string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger partner-card-body">
+                    <strong>Error!</strong> Some Error Occurred During Operation!
+                </div>
+            }
+            else
+            {*@
+                @Html.Raw(Model.Readme)
+                <br />
+                <br />
+                <div class="text-right">
+                    <button type="submit" asp-action="DownloadWorkspace" asp-route-subscriptionId="@Model.SubscriptionId" asp-route-planId="@Model.PlanId" class="cm-button-default text-right">Download Workspace</button>
+                    <button type="submit" asp-action="Subscriptions" class="cm-button-default mt40 text-right">Go to Subscription List</button>
+                </div>
+
+@*            }*@
+        </div>
+    </form>
+</div>

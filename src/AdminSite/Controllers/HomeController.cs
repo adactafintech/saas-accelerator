@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using Markdig;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
 using Marketplace.SaaS.Accelerator.Services.Configurations;
@@ -311,6 +314,160 @@ public class HomeController : BaseController
         }
     }
 
+
+    /// <summary>
+    /// Subscription guideline.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <returns> The <see cref="IActionResult" />.</returns>
+    public async Task<IActionResult> SubscriptionGuideline(Guid subscriptionId, string planId)
+    {
+        this.logger.LogInformation("Home Controller / SubscriptionGuideline subscriptionId:{0} :: planId:{1}", subscriptionId, planId);
+
+        SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+        SubscriptionGuideline subscriptionGuideline = new Services.Models.SubscriptionGuideline()
+        {
+            SubscriptionId = subscriptionId,
+            PlanId = planId,
+        };
+
+        if (this.User.Identity.IsAuthenticated)
+        {
+            var userId = this.userService.AddUser(this.GetCurrentUserDetail());
+            var currentUserId = this.userService.GetUserIdFromEmailAddress(this.CurrentUserEmailAddress);
+            this.subscriptionService = new SubscriptionService(this.subscriptionRepo, this.planRepository, userId);
+            this.logger.LogInformation("User authenticate successfully & GetSubscriptionByIdAsync  SubscriptionID :{0}", JsonSerializer.Serialize(subscriptionId));
+            this.TempData["ShowWelcomeScreen"] = false;
+            var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            var serializedParent = JsonSerializer.Serialize(oldValue);
+            subscriptionDetail = JsonSerializer.Deserialize<SubscriptionResultExtension>(serializedParent);
+            this.logger.LogInformation("serializedParent :{0}", serializedParent);
+            subscriptionDetail.ShowWelcomeScreen = false;
+            subscriptionDetail.SubscriptionStatus = oldValue.SubscriptionStatus;
+            subscriptionDetail.CustomerEmailAddress = oldValue.CustomerEmailAddress;
+            subscriptionDetail.CustomerName = oldValue.CustomerName;
+            var plandetails = this.planRepository.GetById(oldValue.PlanId);
+            subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+            var detailsFromAPI = await this.fulfillApiService.GetSubscriptionByIdAsync(subscriptionId).ConfigureAwait(false);
+            subscriptionDetail.Beneficiary = detailsFromAPI.Beneficiary;
+
+            var tenantName = subscriptionDetail.SubscriptionParameters.Where(p => p.DisplayName == "Tenant Name").Single().Value;
+            var branchName = this.saaSApiClientConfiguration.ProvisionBranch;
+
+            var accountUrl = branchName == "saas-env/prerelease" ?
+                    new Uri("https://adicloudprovprerelease.blob.core.windows.net/") :
+                    new Uri("https://adicloudprovrelease.blob.core.windows.net/");
+
+            var blobName = $"tenant-provisioning-doc-b64-{tenantName}";
+
+            try
+            {
+
+                var blobServiceClient = new BlobServiceClient(accountUrl, new DefaultAzureCredential());
+
+                var blobContainerClient = blobServiceClient.GetBlobContainerClient("cloud-tenant-downloads");
+
+                var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+                var blobDownloadResult = await blobClient.DownloadContentAsync();
+                string blobContents = blobDownloadResult.Value.Content.ToString();
+
+                byte[] data = Convert.FromBase64String(blobContents);
+                string decodedString = System.Text.Encoding.UTF8.GetString(data);
+
+                var pipeline = new MarkdownPipelineBuilder()
+                    .UseAdvancedExtensions()
+                    .Build();
+
+                subscriptionGuideline.Readme = Markdown.ToHtml(decodedString, pipeline);
+                subscriptionGuideline.Readme = subscriptionGuideline.Readme.Replace("<h1 id=\"adinsure-cloud\">AdInsure Cloud</h1>", "").Replace("h3", "h4").Replace("h2", "h3");
+
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                throw ex;
+            }
+        }
+        return this.View(subscriptionGuideline);
+    }
+
+    /// <summary>
+    /// Download workspace.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <returns> The <see cref="IActionResult" />.</returns>
+    public async Task<IActionResult> DownloadWorkspace(Guid subscriptionId, string planId)
+    {
+        this.logger.LogInformation("Home Controller / DownloadWorkspace subscriptionId:{0} :: planId:{1}", subscriptionId, planId);
+
+        SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+        SubscriptionGuideline subscriptionGuideline = new Services.Models.SubscriptionGuideline()
+        {
+            SubscriptionId = subscriptionId,
+            PlanId = planId,
+        };
+
+        if (this.User.Identity.IsAuthenticated)
+        {
+            var userId = this.userService.AddUser(this.GetCurrentUserDetail());
+            var currentUserId = this.userService.GetUserIdFromEmailAddress(this.CurrentUserEmailAddress);
+            this.subscriptionService = new SubscriptionService(this.subscriptionRepository, this.planRepository, userId);
+            this.logger.LogInformation("User authenticate successfully & GetSubscriptionByIdAsync  SubscriptionID :{0}", JsonSerializer.Serialize(subscriptionId));
+            this.TempData["ShowWelcomeScreen"] = false;
+            var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            var serializedParent = JsonSerializer.Serialize(oldValue);
+            subscriptionDetail = JsonSerializer.Deserialize<SubscriptionResultExtension>(serializedParent);
+            this.logger.LogInformation("serializedParent :{0}", serializedParent);
+            subscriptionDetail.ShowWelcomeScreen = false;
+            subscriptionDetail.SubscriptionStatus = oldValue.SubscriptionStatus;
+            subscriptionDetail.CustomerEmailAddress = oldValue.CustomerEmailAddress;
+            subscriptionDetail.CustomerName = oldValue.CustomerName;
+            var plandetails = this.planRepository.GetById(oldValue.PlanId);
+            subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+
+            var tenantName = subscriptionDetail.SubscriptionParameters.Where(p => p.DisplayName == "Tenant Name").Single().Value;
+            var branchName = this.saaSApiClientConfiguration.ProvisionBranch;
+
+            var accountUrl = branchName == "saas-env/prerelease" ?
+                    new Uri("https://adicloudprovprerelease.blob.core.windows.net/") :
+                    new Uri("https://adicloudprovrelease.blob.core.windows.net/");
+
+            var blobName = $"adinsure-cloud-tenant-{tenantName}.zip";
+
+            try
+            {
+
+                var blobServiceClient = new BlobServiceClient(accountUrl, new DefaultAzureCredential());
+
+                var blobContainerClient = blobServiceClient.GetBlobContainerClient("cloud-tenant-downloads");
+
+                var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+                var blobStream = await blobClient.OpenReadAsync();
+
+                return File(blobStream, "application/zip", blobName);
+
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                throw ex;
+            }
+        }
+        else
+        {
+            subscriptionGuideline.ErrorMessage = "Unauthorized acces. Please login.";
+            return this.View("SubscriptionGuideline", subscriptionGuideline);
+        }
+    }
+
     /// <summary>
     /// Subscriptions the details.
     /// </summary>
@@ -427,18 +584,21 @@ public class HomeController : BaseController
 
             if (operation == "Deactivate")
             {
-                this.logger?.LogInformation($"ProvisionAPIBaseUrl :: {this.saaSApiClientConfiguration.ProvisionAPIBaseUrl}");
-                this.subscriptionRepository.UpdateStatusForSubscription(subscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), true);
-                SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                if (oldValue?.SubscriptionStatus != SubscriptionStatusEnumExtension.DeprovisioningFailed)
                 {
-                    Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-                    SubscriptionId = oldValue.SubscribeId,
-                    NewValue = SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(),
-                    OldValue = oldValue.SubscriptionStatus.ToString(),
-                    CreateBy = userDetails.UserId,
-                    CreateDate = DateTime.Now,
-                };
-                this.subscriptionLogRepository.Save(auditLog);
+                    this.subscriptionService.UpdateStateOfSubscription(subscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), true);
+
+                    SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                    {
+                        Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
+                        SubscriptionId = oldValue.SubscribeId,
+                        NewValue = SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(),
+                        OldValue = oldValue.SubscriptionStatus.ToString(),
+                        CreateBy = userDetails.UserId,
+                        CreateDate = DateTime.Now,
+                    };
+                    this.subscriptionLogRepository.Save(auditLog);
+                }
 
                 this.unsubscribeStatusHandlers.Process(subscriptionId);
             }

@@ -84,7 +84,7 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
         this.logger?.LogInformation("Get User");
         var userdeatils = this.GetUserById(subscription.UserId);
         string status = subscription.SubscriptionStatus;
-        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString())
+        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString() || subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.UnsubscribeFailed.ToString())
         {
             try
             {
@@ -127,6 +127,10 @@ public class UnsubscribeStatusHandler : AbstractSubscriptionStatusHandler
                 // if error in unsubscribing then do not deprovision tenant
                 return;
             }
+        }
+
+        if (subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.Unsubscribed.ToString() || subscription.SubscriptionStatus == SubscriptionStatusEnumExtension.DeprovisioningFailed.ToString())
+        {
 
             try
             {

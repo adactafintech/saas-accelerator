@@ -6,8 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using Markdig;
 using Marketplace.SaaS.Accelerator.DataAccess.Contracts;
 using Marketplace.SaaS.Accelerator.DataAccess.Entities;
+using Marketplace.SaaS.Accelerator.Services.Configurations;
 using Marketplace.SaaS.Accelerator.Services.Contracts;
 using Marketplace.SaaS.Accelerator.Services.Exceptions;
 using Marketplace.SaaS.Accelerator.Services.Models;
@@ -102,6 +106,8 @@ public class HomeController : BaseController
     /// </summary>
     private UserService userService;
 
+    private SaaSApiClientConfiguration saaSApiClientConfiguration;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeController" /> class.
     /// </summary>
@@ -122,7 +128,7 @@ public class HomeController : BaseController
     /// <param name="cloudConfigs">The cloud configs.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     /// <param name="emailService">The email service.</param>
-    public HomeController(ILogger<HomeController> logger, IFulfillmentApiService apiService, IProvisioningApiService provisioningApiService, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, IUsersRepository userRepository, IApplicationLogRepository applicationLogRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IEmailTemplateRepository emailTemplateRepository, IOffersRepository offersRepository, IPlanEventsMappingRepository planEventsMappingRepository, IOfferAttributesRepository offerAttributesRepository, IEventsRepository eventsRepository, ILoggerFactory loggerFactory, IEmailService emailService)
+    public HomeController(ILogger<HomeController> logger, IFulfillmentApiService apiService, IProvisioningApiService provisioningApiService, ISubscriptionsRepository subscriptionRepo, IPlansRepository planRepository, IUsersRepository userRepository, IApplicationLogRepository applicationLogRepository, ISubscriptionLogRepository subscriptionLogsRepo, IApplicationConfigRepository applicationConfigRepository, IEmailTemplateRepository emailTemplateRepository, IOffersRepository offersRepository, IPlanEventsMappingRepository planEventsMappingRepository, IOfferAttributesRepository offerAttributesRepository, IEventsRepository eventsRepository, SaaSApiClientConfiguration saaSApiClientConfiguration, ILoggerFactory loggerFactory, IEmailService emailService)
     {
         this.apiService = apiService;
         this.provisioningApiService = provisioningApiService;
@@ -144,6 +150,7 @@ public class HomeController : BaseController
         this.planService = new PlanService(this.planRepository, this.offerAttributesRepository, this.offersRepository);
         this.eventsRepository = eventsRepository;
         this.emailService = emailService;
+        this.saaSApiClientConfiguration = saaSApiClientConfiguration;
         this.loggerFactory = loggerFactory;
 
         this.pendingActivationStatusHandlers = new PendingActivationStatusHandler(
@@ -476,6 +483,158 @@ public class HomeController : BaseController
         }
     }
 
+
+    /// <summary>
+    /// Subscription guideline.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <returns> The <see cref="IActionResult" />.</returns>
+    public async Task<IActionResult> SubscriptionGuideline(Guid subscriptionId, string planId)
+    {
+        this.logger.LogInformation("Home Controller / SubscriptionGuideline subscriptionId:{0} :: planId:{1}", subscriptionId, planId);
+
+        SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+        SubscriptionGuideline subscriptionGuideline = new Services.Models.SubscriptionGuideline()
+        {
+            SubscriptionId = subscriptionId,
+            PlanId = planId,
+        };
+
+        if (this.User.Identity.IsAuthenticated)
+        {
+            var userId = this.userService.AddUser(this.GetCurrentUserDetail());
+            var currentUserId = this.userService.GetUserIdFromEmailAddress(this.CurrentUserEmailAddress);
+            this.subscriptionService = new SubscriptionService(this.subscriptionRepository, this.planRepository, userId);
+            this.logger.LogInformation("User authenticate successfully & GetSubscriptionByIdAsync  SubscriptionID :{0}", JsonSerializer.Serialize(subscriptionId));
+            this.TempData["ShowWelcomeScreen"] = false;
+            var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            var serializedParent = JsonSerializer.Serialize(oldValue);
+            subscriptionDetail = JsonSerializer.Deserialize<SubscriptionResultExtension>(serializedParent);
+            this.logger.LogInformation("serializedParent :{0}", serializedParent);
+            subscriptionDetail.ShowWelcomeScreen = false;
+            subscriptionDetail.SubscriptionStatus = oldValue.SubscriptionStatus;
+            subscriptionDetail.CustomerEmailAddress = oldValue.CustomerEmailAddress;
+            subscriptionDetail.CustomerName = oldValue.CustomerName;
+            var plandetails = this.planRepository.GetById(oldValue.PlanId);
+            subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+
+            var tenantName = subscriptionDetail.SubscriptionParameters.Where(p => p.DisplayName == "Tenant Name").Single().Value;
+            var branchName = this.saaSApiClientConfiguration.ProvisionBranch;
+
+            var accountUrl = branchName == "saas-env/prerelease" ?
+                    new Uri("https://adicloudprovprerelease.blob.core.windows.net/") :
+                    new Uri("https://adicloudprovrelease.blob.core.windows.net/");
+
+            var blobName = $"tenant-provisioning-doc-b64-{tenantName}";
+
+            try
+            {
+
+                var blobServiceClient = new BlobServiceClient(accountUrl, new DefaultAzureCredential());
+
+                var blobContainerClient = blobServiceClient.GetBlobContainerClient("cloud-tenant-downloads");
+
+                var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+                var blobDownloadResult = await blobClient.DownloadContentAsync();
+                string blobContents = blobDownloadResult.Value.Content.ToString();
+
+                byte[] data = Convert.FromBase64String(blobContents);
+                string decodedString = System.Text.Encoding.UTF8.GetString(data);
+
+                var pipeline = new MarkdownPipelineBuilder()
+                    .UseAdvancedExtensions()
+                    .Build();
+
+                subscriptionGuideline.Readme = Markdown.ToHtml(decodedString, pipeline);
+                subscriptionGuideline.Readme = subscriptionGuideline.Readme.Replace("<h1 id=\"adinsure-cloud\">AdInsure Cloud</h1>", "").Replace("h3", "h4").Replace("h2", "h3");
+
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                throw ex;
+            }
+        }
+        return this.View(subscriptionGuideline);
+    }
+
+    /// <summary>
+    /// Download workspace.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription identifier.</param>
+    /// <param name="planId">The plan identifier.</param>
+    /// <returns> The <see cref="IActionResult" />.</returns>
+    public async Task<IActionResult> DownloadWorkspace(Guid subscriptionId, string planId)
+    {
+        this.logger.LogInformation("Home Controller / DownloadWorkspace subscriptionId:{0} :: planId:{1}", subscriptionId, planId);
+
+        SubscriptionResultExtension subscriptionDetail = new SubscriptionResultExtension();
+        SubscriptionGuideline subscriptionGuideline = new Services.Models.SubscriptionGuideline()
+        {
+            SubscriptionId = subscriptionId,
+            PlanId = planId,
+        };
+
+        if (this.User.Identity.IsAuthenticated)
+        {
+            var userId = this.userService.AddUser(this.GetCurrentUserDetail());
+            var currentUserId = this.userService.GetUserIdFromEmailAddress(this.CurrentUserEmailAddress);
+            this.subscriptionService = new SubscriptionService(this.subscriptionRepository, this.planRepository, userId);
+            this.logger.LogInformation("User authenticate successfully & GetSubscriptionByIdAsync  SubscriptionID :{0}", JsonSerializer.Serialize(subscriptionId));
+            this.TempData["ShowWelcomeScreen"] = false;
+            var oldValue = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            var serializedParent = JsonSerializer.Serialize(oldValue);
+            subscriptionDetail = JsonSerializer.Deserialize<SubscriptionResultExtension>(serializedParent);
+            this.logger.LogInformation("serializedParent :{0}", serializedParent);
+            subscriptionDetail.ShowWelcomeScreen = false;
+            subscriptionDetail.SubscriptionStatus = oldValue.SubscriptionStatus;
+            subscriptionDetail.CustomerEmailAddress = oldValue.CustomerEmailAddress;
+            subscriptionDetail.CustomerName = oldValue.CustomerName;
+            var plandetails = this.planRepository.GetById(oldValue.PlanId);
+            subscriptionDetail = this.subscriptionService.GetSubscriptionsBySubscriptionId(subscriptionId);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+            subscriptionDetail.SubscriptionParameters = this.subscriptionService.GetSubscriptionsParametersById(subscriptionId, plandetails.PlanGuid);
+
+            var tenantName = subscriptionDetail.SubscriptionParameters.Where(p => p.DisplayName == "Tenant Name").Single().Value;
+            var branchName = this.saaSApiClientConfiguration.ProvisionBranch;
+
+            var accountUrl = branchName == "saas-env/prerelease" ?
+                    new Uri("https://adicloudprovprerelease.blob.core.windows.net/") :
+                    new Uri("https://adicloudprovrelease.blob.core.windows.net/");
+
+            var blobName = $"adinsure-cloud-tenant-{tenantName}.zip";
+
+            try
+            {
+
+                var blobServiceClient = new BlobServiceClient(accountUrl, new DefaultAzureCredential());
+
+                var blobContainerClient = blobServiceClient.GetBlobContainerClient("cloud-tenant-downloads");
+
+                var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+                var blobStream = await blobClient.OpenReadAsync();
+
+                return File(blobStream, "application/zip", blobName);
+
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                throw ex;
+            }
+        }
+        else
+        {
+            subscriptionGuideline.ErrorMessage = "Unauthorized acces. Please login.";
+            return this.View("SubscriptionGuideline", subscriptionGuideline);
+        }        
+    }
+
     /// <summary>
     /// Subscriptions the details.
     /// </summary>
@@ -622,19 +781,22 @@ public class HomeController : BaseController
 
                     if (operation == "Deactivate")
                     {
-                        this.subscriptionService.UpdateStateOfSubscription(subscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), true);
-                        if (oldValue != null)
+                        if (oldValue?.SubscriptionStatus != SubscriptionStatusEnumExtension.DeprovisioningFailed)
                         {
-                            SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                            this.subscriptionService.UpdateStateOfSubscription(subscriptionId, SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(), true);
+                            if (oldValue != null)
                             {
-                                Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
-                                SubscriptionId = oldValue.SubscribeId,
-                                NewValue = SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(),
-                                OldValue = oldValue.SubscriptionStatus.ToString(),
-                                CreateBy = currentUserId,
-                                CreateDate = DateTime.Now,
-                            };
-                            this.subscriptionLogRepository.Save(auditLog);
+                                SubscriptionAuditLogs auditLog = new SubscriptionAuditLogs()
+                                {
+                                    Attribute = Convert.ToString(SubscriptionLogAttributes.Status),
+                                    SubscriptionId = oldValue.SubscribeId,
+                                    NewValue = SubscriptionStatusEnumExtension.PendingUnsubscribe.ToString(),
+                                    OldValue = oldValue.SubscriptionStatus.ToString(),
+                                    CreateBy = currentUserId,
+                                    CreateDate = DateTime.Now,
+                                };
+                                this.subscriptionLogRepository.Save(auditLog);
+                            }
                         }
 
                         this.unsubscribeStatusHandlers.Process(subscriptionId);

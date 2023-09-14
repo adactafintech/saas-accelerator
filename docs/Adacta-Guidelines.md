@@ -349,3 +349,7 @@ When the client does not want to use AdInsure Cloud for Life anymore, it is poss
 
 If unsubscribing is done on Customer portal, then 
 
+### Appendix
+
+- GitLab Access Token (Cloud repo) - ddVqxQa376Ek4wEBehNF
+

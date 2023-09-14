@@ -19,7 +19,7 @@ where PlanID = '5c0ac747-5d69-49d4-85a5-2ed4bace2c09'
   and [Value] = 'Test01.2225'
 
 -- update dbo.Subscriptions
--- set SubscriptionStatus = 'ProvisioningFailed'
+-- set SubscriptionStatus = 'Deprovisioned'
 -- where Id = 8
 
 -- update SubscriptionAttributeValues
