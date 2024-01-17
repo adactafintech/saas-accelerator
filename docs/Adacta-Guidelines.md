@@ -8,7 +8,7 @@
 ## Warnings
 
 - Reserved `WebAppNamePredix` values are: `adi-sa-kv` (prod), `adi-dev-sa-kv` (preprod).
-- Reserved `ResourceGroupForDeployment` values are: `rg-saas-accelerator` (prod), `rg-saas-accelerator-dev` (preprod).
+- Reserved `ResourceGroupForDeployment` values are: `rg-cloud-saas-accel` (prod), `rg-cloud-saas-accel-dev` (preprod).
 - AZ user that executes deployment should have permission to set policy on AdInsure Cloud KeyVault, that will grant `get` and `list` permission to secrets to Customer and Admin portal identities.
 - AZ user should have permission to create App Registration on the tenant's AZ AD.
 
@@ -34,7 +34,7 @@ git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-
 cd ./saas-accelerator/deployment; `
 .\Deploy.ps1 `
  -WebAppNamePrefix "adi-dev-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator-dev" `
+ -ResourceGroupForDeployment "rg-cloud-saas-accel-dev" `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
  -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
  -ProvisionBranch "saas-env/prerelease" `
@@ -58,7 +58,7 @@ git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-
 cd ./saas-accelerator/deployment; `
 .\Deploy.ps1 `
  -WebAppNamePrefix "adi-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator" `
+ -ResourceGroupForDeployment "rg-cloud-saas-accel" `
  -PublisherAdminUsers "igor.mileusnic@adacta-fintech.com,jernej.kladnik@adacta-fintech.com" `
  -ProvisionAPIBaseURL "https://git.adacta-fintech.com/api/v4/projects/668/trigger/pipeline" `
  -ProvisionBranch "saas-env/release" `
@@ -158,7 +158,7 @@ git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-
 cd ./saas-accelerator/deployment; `
 .\Upgrade.ps1 `
  -WebAppNamePrefix "adi-dev-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator-dev"
+ -ResourceGroupForDeployment "rg-cloud-saas-accel-dev"
 ```
 
 ### Prod Upgrade
@@ -173,14 +173,14 @@ git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-
 cd ./saas-accelerator/deployment; `
 .\Upgrade.ps1 `
  -WebAppNamePrefix "adi-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator"
+ -ResourceGroupForDeployment "rg-cloud-saas-accel"
 ```
 
 ## Deletion
 
 Deletion of Azure resources:
 
-1. Delete resource group (e.g. `rg-saas-accelerator-dev`)
+1. Delete resource group (e.g. `rg-cloud-saas-accel-dev`)
 2. Purge keyvault (it is soft-deleted within resource group) with command: `az keyvault purge --name <keyvault-name` (e.g. `adi-dev-sa-kv`, `adi-sa-kv`).
 3. Delete two app registrations.
 
@@ -205,7 +205,7 @@ git clone https://github.com/adactafintech/saas-accelerator.git -b adacta-setup-
 cd ./saas-accelerator/deployment; `
 .\Cleanup.ps1 `
  -WebAppNamePrefix "adi-dev-sa" `
- -ResourceGroupForDeployment "rg-saas-accelerator-dev"
+ -ResourceGroupForDeployment "rg-cloud-saas-accel-dev"
 ```
 
 ### Prod Deletion

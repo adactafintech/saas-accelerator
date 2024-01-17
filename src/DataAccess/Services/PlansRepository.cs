@@ -69,7 +69,7 @@ public class PlansRepository : IPlansRepository
     {
         if (planDetails != null && !string.IsNullOrEmpty(planDetails.PlanId))
         {
-            var existingPlan = this.context.Plans.Include(p => p.MeteredDimensions).Where(s => s.PlanId == planDetails.PlanId).FirstOrDefault();
+            var existingPlan = this.context.Plans.Include(p => p.MeteredDimensions).Where(s => s.PlanId == planDetails.PlanId && s.OfferId == planDetails.OfferId).FirstOrDefault();
             if (existingPlan != null)
             {
                 //room for improvement as these values dont change we dont make a db trip if something changes?

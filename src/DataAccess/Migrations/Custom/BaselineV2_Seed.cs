@@ -147,6 +147,7 @@ left  join
 on OA.ID= PA.OfferAttributeID and OA.OfferId=@OfferId  
 and  PA.PlanId=@PlanId  
 where    
+OA.OfferId=@OfferId
 OA.Isactive=1   
   
 END

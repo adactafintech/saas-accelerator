@@ -7,7 +7,7 @@
   "parameters": {
     "resourceGroupName": {
       "type": "string",
-      "defaultValue": "rg-saas-accelerator-dev",
+      "defaultValue": "rg-cloud-saas-accel-dev",
       "metadata": {
         "description": "Name of the resource group for the resource. It is recommended to put resources under same resource group for better tracking."
       }
